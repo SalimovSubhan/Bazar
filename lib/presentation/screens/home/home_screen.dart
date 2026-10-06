@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
+import '../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../injection_container.dart';
 import '../../blocs/categories/categories_bloc.dart';
 import '../../blocs/products/products_bloc.dart';
@@ -54,12 +55,24 @@ class _HomeViewState extends State<_HomeView> {
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
+    sl<ScrollToTopNotifier>().addListener(_scrollToTop);
   }
 
   @override
   void dispose() {
+    sl<ScrollToTopNotifier>().removeListener(_scrollToTop);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   void _onScroll() {

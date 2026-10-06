@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../core/constants/locale_keys.dart';
+import '../../core/utils/scroll_to_top_notifier.dart';
+import '../../injection_container.dart';
 
 class MainScaffold extends StatelessWidget {
   final StatefulNavigationShell shell;
@@ -16,10 +18,12 @@ class MainScaffold extends StatelessWidget {
       extendBody: true,
       bottomNavigationBar: _FloatingNavBar(
         selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) => shell.goBranch(
-          i,
-          initialLocation: i == shell.currentIndex,
-        ),
+        onDestinationSelected: (i) {
+          if (i == shell.currentIndex && i == 0) {
+            sl<ScrollToTopNotifier>().notify();
+          }
+          shell.goBranch(i, initialLocation: i == shell.currentIndex);
+        },
       ),
     );
   }

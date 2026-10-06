@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/dio_client.dart';
+import 'core/utils/scroll_to_top_notifier.dart';
 import 'data/datasources/product_remote_datasource.dart';
 import 'data/repositories/product_repository_impl.dart';
 import 'domain/repositories/product_repository.dart';
@@ -18,6 +19,7 @@ final sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   // Core
+  sl.registerSingleton<ScrollToTopNotifier>(ScrollToTopNotifier());
   final prefs = await SharedPreferences.getInstance();
   sl.registerSingleton<SharedPreferences>(prefs);
   sl.registerSingleton<Dio>(createDio());
