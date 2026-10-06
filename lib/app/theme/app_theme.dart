@@ -36,16 +36,15 @@ abstract final class AppTheme {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: false,
-          backgroundColor: AppColors.surfaceLight,
-          foregroundColor: AppColors.onSurfaceLight,
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape: Border(
-            bottom: BorderSide(color: AppColors.borderLight, width: 1),
-          ),
+          iconTheme: IconThemeData(color: Colors.white),
+          actionsIconTheme: IconThemeData(color: Colors.white),
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.dark,
+            statusBarIconBrightness: Brightness.light,
           ),
         ),
         cardTheme: CardThemeData(
@@ -89,27 +88,27 @@ abstract final class AppTheme {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: AppColors.surfaceLight,
+          backgroundColor: AppColors.primary,
           surfaceTintColor: Colors.transparent,
-          shadowColor: AppColors.borderLight,
-          elevation: 1,
+          shadowColor: Colors.transparent,
+          elevation: 0,
           height: 64,
-          indicatorColor: AppColors.primary.withAlpha(25),
+          indicatorColor: Colors.white.withAlpha(40),
           iconTheme: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: AppColors.primary, size: 24);
+              return const IconThemeData(color: Colors.white, size: 24);
             }
-            return const IconThemeData(color: AppColors.subtitleLight, size: 24);
+            return IconThemeData(color: Colors.white.withAlpha(160), size: 24);
           }),
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(
-                  color: AppColors.primary,
+                  color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w600);
             }
-            return const TextStyle(
-                color: AppColors.subtitleLight,
+            return TextStyle(
+                color: Colors.white.withAlpha(160),
                 fontSize: 12,
                 fontWeight: FontWeight.w500);
           }),
@@ -152,13 +151,12 @@ abstract final class AppTheme {
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: false,
-          backgroundColor: AppColors.surfaceDark,
-          foregroundColor: AppColors.onSurfaceDark,
+          backgroundColor: AppColors.primaryDark,
+          foregroundColor: Colors.white,
           surfaceTintColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          shape: Border(
-            bottom: BorderSide(color: AppColors.borderDark, width: 1),
-          ),
+          iconTheme: IconThemeData(color: Colors.white),
+          actionsIconTheme: IconThemeData(color: Colors.white),
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarIconBrightness: Brightness.light,
@@ -211,26 +209,27 @@ abstract final class AppTheme {
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: AppColors.surfaceDark,
+          backgroundColor: AppColors.primaryDark,
           surfaceTintColor: Colors.transparent,
-          elevation: 1,
+          shadowColor: Colors.transparent,
+          elevation: 0,
           height: 64,
-          indicatorColor: AppColors.primaryLight.withAlpha(30),
+          indicatorColor: Colors.white.withAlpha(40),
           iconTheme: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return const IconThemeData(color: AppColors.primaryLight, size: 24);
+              return const IconThemeData(color: Colors.white, size: 24);
             }
-            return const IconThemeData(color: AppColors.subtitleDark, size: 24);
+            return IconThemeData(color: Colors.white.withAlpha(160), size: 24);
           }),
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(
-                  color: AppColors.primaryLight,
+                  color: Colors.white,
                   fontSize: 12,
                   fontWeight: FontWeight.w600);
             }
-            return const TextStyle(
-                color: AppColors.subtitleDark,
+            return TextStyle(
+                color: Colors.white.withAlpha(160),
                 fontSize: 12,
                 fontWeight: FontWeight.w500);
           }),
