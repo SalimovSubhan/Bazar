@@ -1,0 +1,31 @@
+abstract final class LocaleKeys {
+  static const appName = 'appName';
+  static const homeTitle = 'homeTitle';
+  static const favoritesTitle = 'favoritesTitle';
+  static const searchHint = 'searchHint';
+  static const allCategories = 'allCategories';
+  static const noResults = 'noResults';
+  static const noResultsDescription = 'noResultsDescription';
+  static const emptyFavorites = 'emptyFavorites';
+  static const emptyFavoritesDescription = 'emptyFavoritesDescription';
+  static const errorTitle = 'errorTitle';
+  static const errorDescription = 'errorDescription';
+  static const tryAgain = 'tryAgain';
+  static const noInternet = 'noInternet';
+  static const offlineBanner = 'offlineBanner';
+  static const inStock = 'inStock';
+  static const outOfStock = 'outOfStock';
+  static const rating = 'rating';
+  static const description = 'description';
+  static const brand = 'brand';
+  static const off = 'off';
+  static const settings = 'settings';
+  static const darkTheme = 'darkTheme';
+  static const language = 'language';
+  static const addedToFavorites = 'addedToFavorites';
+  static const removedFromFavorites = 'removedFromFavorites';
+  static const reviews = 'reviews';
+  static const price = 'price';
+  static const stock = 'stock';
+  static const category = 'category';
+}
