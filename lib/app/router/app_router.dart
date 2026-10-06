@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/screens/categories/categories_screen.dart';
 import '../../presentation/screens/favorites/favorites_screen.dart';
@@ -16,7 +17,10 @@ abstract final class AppRoutes {
   static String productDetailPath(int id) => '/product/$id';
 }
 
+final navigatorKey = GlobalKey<NavigatorState>();
+
 final appRouter = GoRouter(
+  navigatorKey: navigatorKey,
   initialLocation: AppRoutes.home,
   routes: [
     StatefulShellRoute.indexedStack(
