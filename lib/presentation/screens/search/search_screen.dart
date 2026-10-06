@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
-import '../../../core/mock/mock_products.dart';
 import '../../../core/utils/app_extensions.dart';
+import '../../../core/utils/debouncer.dart';
 import '../../../domain/entities/product.dart';
+import '../../../injection_container.dart';
+import '../../../domain/usecases/search_products_usecase.dart';
 import '../../widgets/app_empty_widget.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -21,20 +23,63 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
+  final _debouncer = Debouncer();
+  final _searchUseCase = sl<SearchProductsUseCase>();
+
   String _query = '';
+  bool _isLoading = false;
+  List<Product> _results = [];
+  String? _error;
   final List<String> _recents = [];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _focusNode.requestFocus());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _focusNode.requestFocus());
   }
 
   @override
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
+    _debouncer.dispose();
     super.dispose();
+  }
+
+  void _onChanged(String q) {
+    setState(() {
+      _query = q;
+      _error = null;
+    });
+    if (q.trim().isEmpty) {
+      setState(() {
+        _results = [];
+        _isLoading = false;
+      });
+      return;
+    }
+    setState(() => _isLoading = true);
+    _debouncer(() => _search(q.trim()));
+  }
+
+  Future<void> _search(String q) async {
+    try {
+      final results = await _searchUseCase(q);
+      if (mounted) {
+        setState(() {
+          _results = results;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _onSubmit(String q) {
@@ -48,19 +93,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _applyRecent(String term) {
     _controller.text = term;
-    _controller.selection = TextSelection.fromPosition(TextPosition(offset: term.length));
-    setState(() => _query = term);
-  }
-
-  List<Product> get _results {
-    if (_query.isEmpty) return [];
-    final q = _query.toLowerCase();
-    return mockProducts
-        .where((p) =>
-            p.title.toLowerCase().contains(q) ||
-            p.brand.toLowerCase().contains(q) ||
-            p.category.toLowerCase().contains(q))
-        .toList();
+    _controller.selection =
+        TextSelection.fromPosition(TextPosition(offset: term.length));
+    _onChanged(term);
   }
 
   @override
@@ -68,18 +103,24 @@ class _SearchScreenState extends State<SearchScreen> {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Column(
         children: [
           _SearchHeader(
             controller: _controller,
             focusNode: _focusNode,
             query: _query,
-            onChanged: (q) => setState(() => _query = q),
+            onChanged: _onChanged,
             onSubmitted: _onSubmit,
             onClear: () {
               _controller.clear();
-              setState(() => _query = '');
+              setState(() {
+                _query = '';
+                _results = [];
+                _isLoading = false;
+                _error = null;
+              });
             },
             onCancel: () => context.pop(),
           ),
@@ -95,7 +136,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildRecents(bool isDark) {
     if (_recents.isEmpty) return const SizedBox.shrink();
-    final subtitleColor = isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
+    final subtitleColor =
+        isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
     final textColor = isDark ? AppColors.onSurfaceDark : AppColors.onSurfaceLight;
 
     return ListView(
@@ -129,13 +171,18 @@ class _SearchScreenState extends State<SearchScreen> {
               .map((r) => GestureDetector(
                     onTap: () => _applyRecent(r),
                     child: Chip(
-                      label: Text(r, style: TextStyle(fontSize: 13, color: textColor)),
-                      deleteIcon: Icon(Icons.close_rounded, size: 14, color: subtitleColor),
+                      label: Text(r,
+                          style: TextStyle(fontSize: 13, color: textColor)),
+                      deleteIcon: Icon(Icons.close_rounded,
+                          size: 14, color: subtitleColor),
                       onDeleted: () => setState(() => _recents.remove(r)),
-                      backgroundColor:
-                          isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                      backgroundColor: isDark
+                          ? AppColors.surfaceDark
+                          : AppColors.surfaceLight,
                       side: BorderSide(
-                          color: isDark ? AppColors.borderDark : AppColors.borderLight),
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight),
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -147,9 +194,19 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResults(bool isDark) {
-    final results = _results;
-
-    if (results.isEmpty) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(
+        child: Text(_error!,
+            style: TextStyle(
+                color: isDark
+                    ? AppColors.subtitleDark
+                    : AppColors.subtitleLight)),
+      );
+    }
+    if (_results.isEmpty) {
       return AppEmptyWidget(
         icon: Icons.search_off_rounded,
         title: LocaleKeys.noResults.tr(),
@@ -157,24 +214,28 @@ class _SearchScreenState extends State<SearchScreen> {
       );
     }
 
-    final subtitleColor = isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
-    final surfaceColor = isDark ? AppColors.surfaceDark2 : AppColors.backgroundLight;
+    final subtitleColor =
+        isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
+    final borderColor =
+        isDark ? AppColors.borderDark : AppColors.borderLight;
+    final surfaceColor =
+        isDark ? AppColors.surfaceDark2 : AppColors.backgroundLight;
 
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: results.length,
+      itemCount: _results.length,
       separatorBuilder: (_, __) =>
           Divider(color: borderColor, height: 1, indent: 76),
       itemBuilder: (context, index) {
-        final p = results[index];
+        final p = _results[index];
         return InkWell(
           onTap: () {
             _onSubmit(_query);
             context.push(AppRoutes.productDetailPath(p.id));
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
                 ClipRRect(
@@ -187,7 +248,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     placeholder: (_, __) => Container(color: surfaceColor),
                     errorWidget: (_, __, ___) => Container(
                       color: surfaceColor,
-                      child: const Icon(Icons.image_not_supported_outlined, size: 20),
+                      child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          size: 20),
                     ),
                   ),
                 ),
@@ -282,7 +345,8 @@ class _SearchHeader extends StatelessWidget {
                 cursorColor: Colors.white,
                 decoration: InputDecoration(
                   hintText: LocaleKeys.searchHint.tr(),
-                  hintStyle: TextStyle(color: Colors.white.withAlpha(160), fontSize: 14),
+                  hintStyle: TextStyle(
+                      color: Colors.white.withAlpha(160), fontSize: 14),
                   prefixIcon: Icon(Icons.search_rounded,
                       color: Colors.white.withAlpha(200), size: 20),
                   filled: true,
@@ -290,15 +354,18 @@ class _SearchHeader extends StatelessWidget {
                   contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.white.withAlpha(70)),
+                    borderSide:
+                        BorderSide(color: Colors.white.withAlpha(70)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.white.withAlpha(70)),
+                    borderSide:
+                        BorderSide(color: Colors.white.withAlpha(70)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: Colors.white, width: 1.5),
                   ),
                   suffixIcon: query.isNotEmpty
                       ? IconButton(
@@ -315,10 +382,9 @@ class _SearchHeader extends StatelessWidget {
               child: Text(
                 LocaleKeys.cancel.tr(),
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14),
               ),
             ),
           ],

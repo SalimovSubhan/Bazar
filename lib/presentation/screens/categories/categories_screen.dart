@@ -1,40 +1,41 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
-import '../../../core/mock/mock_categories.dart';
 import '../../../core/utils/app_extensions.dart';
+import '../../../injection_container.dart';
+import '../../blocs/categories/categories_bloc.dart';
 import '../../widgets/app_gradient_bar.dart';
 
-class CategoriesScreen extends StatefulWidget {
+class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<CategoriesBloc>()..add(const CategoriesLoadRequested()),
+      child: const _CategoriesView(),
+    );
+  }
 }
 
-class _CategoriesScreenState extends State<CategoriesScreen> {
-  String _query = '';
+class _CategoriesView extends StatefulWidget {
+  const _CategoriesView();
 
-  List<AppCategory> get _filtered {
-    if (_query.isEmpty) return appCategories;
-    final q = _query.toLowerCase();
-    return appCategories
-        .where((c) => c.key.replaceAll('-', ' ').contains(q))
-        .toList();
-  }
+  @override
+  State<_CategoriesView> createState() => _CategoriesViewState();
+}
+
+class _CategoriesViewState extends State<_CategoriesView> {
+  String _query = '';
 
   @override
   Widget build(BuildContext context) {
-    final bgColor =
-        context.isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final cardColor =
-        context.isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor =
-        context.isDark ? AppColors.borderDark : AppColors.borderLight;
-    final subtitleColor =
-        context.isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
+    final isDark = context.isDark;
+    final bgColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final subtitleColor = isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -45,72 +46,126 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: Column(
-        children: [
-          // Search
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              onChanged: (q) => setState(() => _query = q),
-              style: context.textTheme.bodyMedium,
-              decoration: InputDecoration(
-                hintText: LocaleKeys.searchCategoriesHint.tr(),
-                suffixIcon:
-                    Icon(Icons.search_rounded, color: subtitleColor, size: 20),
-              ),
-            ),
-          ),
-          // Grid
-          Expanded(
-            child: _filtered.isEmpty
-                ? Center(
-                    child: Text(
-                      LocaleKeys.noResults.tr(),
-                      style: context.textTheme.bodyMedium
-                          ?.copyWith(color: subtitleColor),
-                    ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 0.88,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, index) {
-                      final cat = _filtered[index];
-                      return _CategoryCard(
-                        category: cat,
-                        cardColor: cardColor,
-                        borderColor: borderColor,
-                      );
-                    },
+      body: BlocBuilder<CategoriesBloc, CategoriesState>(
+        builder: (context, state) {
+          if (state is CategoriesLoading || state is CategoriesInitial) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is CategoriesError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.wifi_off_rounded, size: 48, color: subtitleColor),
+                  const SizedBox(height: 12),
+                  Text(state.message,
+                      style: TextStyle(color: subtitleColor),
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => context
+                        .read<CategoriesBloc>()
+                        .add(const CategoriesLoadRequested()),
+                    child: Text(LocaleKeys.tryAgain.tr()),
                   ),
-          ),
-        ],
+                ],
+              ),
+            );
+          }
+
+          final all = (state as CategoriesLoaded).categories;
+          final filtered = _query.isEmpty
+              ? all
+              : all
+                  .where((c) => c.replaceAll('-', ' ').contains(_query.toLowerCase()))
+                  .toList();
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: TextField(
+                  onChanged: (q) => setState(() => _query = q),
+                  style: context.textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                    hintText: LocaleKeys.searchCategoriesHint.tr(),
+                    suffixIcon: Icon(Icons.search_rounded,
+                        color: subtitleColor, size: 20),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          LocaleKeys.noResults.tr(),
+                          style: context.textTheme.bodyMedium
+                              ?.copyWith(color: subtitleColor),
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.9,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          return _CategoryCard(slug: filtered[index]);
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 class _CategoryCard extends StatelessWidget {
-  final AppCategory category;
-  final Color cardColor;
-  final Color borderColor;
+  final String slug;
 
-  const _CategoryCard({
-    required this.category,
-    required this.cardColor,
-    required this.borderColor,
-  });
+  static const _emojis = <String, String>{
+    'smartphones': '📱',
+    'laptops': '💻',
+    'tablets': '📲',
+    'fragrances': '🌸',
+    'skincare': '✨',
+    'beauty': '💄',
+    'groceries': '🛒',
+    'furniture': '🛋️',
+    'home-decoration': '🏠',
+    'mens-shirts': '👔',
+    'womens-dresses': '👗',
+    'mens-shoes': '👟',
+    'womens-shoes': '👠',
+    'mens-watches': '⌚',
+    'womens-watches': '💎',
+    'sunglasses': '🕶️',
+    'sports-accessories': '⚽',
+    'vehicle': '🚗',
+    'motorcycle': '🏍️',
+    'womens-bags': '👜',
+    'womens-jewellery': '💍',
+    'kitchen-accessories': '🍳',
+    'mobile-accessories': '🎧',
+    'tops': '👕',
+  };
+
+  const _CategoryCard({required this.slug});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    final cardColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+
     return GestureDetector(
-      onTap: () => context.pop(category.key),
+      onTap: () => context.pop(slug),
       child: Container(
         decoration: BoxDecoration(
           color: cardColor,
@@ -122,12 +177,12 @@ class _CategoryCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              category.emoji,
-              style: const TextStyle(fontSize: 40, height: 1),
+              _emojis[slug] ?? '🏷️',
+              style: const TextStyle(fontSize: 36, height: 1),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              category.key.titleCase,
+              slug.titleCase,
               style: context.textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 height: 1.3,

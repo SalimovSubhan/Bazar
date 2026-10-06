@@ -1,13 +1,16 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
-import '../../../core/mock/mock_products.dart';
 import '../../../core/utils/app_extensions.dart';
-import '../../../domain/entities/product.dart';
+import '../../../injection_container.dart';
+import '../../blocs/categories/categories_bloc.dart';
+import '../../blocs/products/products_bloc.dart';
 import '../../widgets/app_empty_widget.dart';
+import '../../widgets/app_error_widget.dart';
 import '../../widgets/home_app_bar.dart';
 import '../../widgets/settings_bottom_sheet.dart';
 import 'widgets/banner_carousel.dart';
@@ -15,29 +18,54 @@ import 'widgets/category_filter_bar.dart';
 import 'widgets/product_card.dart';
 import 'widgets/shimmer_product_card.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => sl<ProductsBloc>()..add(const ProductsLoadRequested()),
+        ),
+        BlocProvider(
+          create: (_) =>
+              sl<CategoriesBloc>()..add(const CategoriesLoadRequested()),
+        ),
+      ],
+      child: const _HomeView(),
+    );
+  }
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  bool _isLoading = true;
-  String? _selectedCategory;
+class _HomeView extends StatefulWidget {
+  const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
   final Set<int> _favorites = {};
+  late final ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) setState(() => _isLoading = false);
-    });
+    _scrollController = ScrollController()..addListener(_onScroll);
   }
 
-  List<Product> get _filteredProducts {
-    if (_selectedCategory == null) return mockProducts;
-    return mockProducts.where((p) => p.category == _selectedCategory).toList();
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 300) {
+      context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());
+    }
   }
 
   void _toggleFavorite(int id) {
@@ -64,31 +92,46 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openCategories() async {
     final result = await context.push<String>(AppRoutes.categories);
     if (result != null && mounted) {
-      setState(() => _selectedCategory = result);
+      context.read<ProductsBloc>().add(ProductsCategoryChanged(result));
     }
-  }
-
-  Future<void> _onRefresh() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor:
-          context.isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      appBar: HomeAppBar(
-        onCategoryTap: _openCategories,
-        onSearchTap: () => context.push(AppRoutes.search),
-        onSettingsTap: () => showSettingsSheet(context),
+    return BlocBuilder<ProductsBloc, ProductsState>(
+      builder: (context, state) => Scaffold(
+        backgroundColor: context.isDark
+            ? AppColors.backgroundDark
+            : AppColors.backgroundLight,
+        appBar: HomeAppBar(
+          onCategoryTap: _openCategories,
+          onSearchTap: () => context.push(AppRoutes.search),
+          onSettingsTap: () => showSettingsSheet(context),
+        ),
+        body: _buildBody(context, state),
       ),
-      body: _isLoading ? _buildShimmerGrid() : _buildContent(),
     );
   }
 
-  Widget _buildShimmerGrid() {
+  Widget _buildBody(BuildContext context, ProductsState state) {
+    if (state.isLoading && state.products.isEmpty) return _buildShimmer();
+    if (state.hasError && state.products.isEmpty) {
+      return AppErrorWidget(
+        onRetry: () =>
+            context.read<ProductsBloc>().add(const ProductsLoadRequested()),
+      );
+    }
+    if (!state.isLoading && state.products.isEmpty) {
+      return AppEmptyWidget(
+        icon: Icons.search_off_rounded,
+        title: LocaleKeys.noResults.tr(),
+        subtitle: LocaleKeys.noResultsDescription.tr(),
+      );
+    }
+    return _buildContent(context, state);
+  }
+
+  Widget _buildShimmer() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
       child: GridView.builder(
@@ -105,56 +148,67 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContent() {
-    final products = _filteredProducts;
+  Widget _buildContent(BuildContext context, ProductsState state) {
+    return BlocBuilder<CategoriesBloc, CategoriesState>(
+      builder: (context, catState) {
+        final categories =
+            catState is CategoriesLoaded ? catState.categories : <String>[];
 
-    if (products.isEmpty) {
-      return AppEmptyWidget(
-        icon: Icons.search_off_rounded,
-        title: LocaleKeys.noResults.tr(),
-        subtitle: LocaleKeys.noResultsDescription.tr(),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _onRefresh,
-      color: AppColors.primary,
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: CategoryFilterBar(
-              categories: mockCategories,
-              selectedCategory: _selectedCategory,
-              onSelected: (cat) => setState(() => _selectedCategory = cat),
-            ),
-          ),
-          const SliverToBoxAdapter(child: BannerCarousel()),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.63,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+        return RefreshIndicator(
+          onRefresh: () async =>
+              context.read<ProductsBloc>().add(const ProductsRefreshRequested()),
+          color: AppColors.primary,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(
+                child: CategoryFilterBar(
+                  categories: categories,
+                  selectedCategory: state.selectedCategory,
+                  onSelected: (cat) => context
+                      .read<ProductsBloc>()
+                      .add(ProductsCategoryChanged(cat)),
+                ),
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final product = products[index];
-                  return ProductCard(
-                    product: product,
-                    isFavorite: _favorites.contains(product.id),
-                    onFavoriteTap: () => _toggleFavorite(product.id),
-                    onTap: () =>
-                        context.push(AppRoutes.productDetailPath(product.id)),
-                  );
-                },
-                childCount: products.length,
+              const SliverToBoxAdapter(child: BannerCarousel()),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
+                sliver: SliverGrid(
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.63,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      if (index == state.products.length) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      final product = state.products[index];
+                      return ProductCard(
+                        product: product,
+                        isFavorite: _favorites.contains(product.id),
+                        onFavoriteTap: () => _toggleFavorite(product.id),
+                        onTap: () => context
+                            .push(AppRoutes.productDetailPath(product.id)),
+                      );
+                    },
+                    childCount:
+                        state.products.length + (state.isLoadingMore ? 1 : 0),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
