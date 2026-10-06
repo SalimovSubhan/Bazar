@@ -5,6 +5,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/mock/mock_categories.dart';
 import '../../../core/utils/app_extensions.dart';
+import '../../widgets/app_gradient_bar.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -37,7 +38,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(
+      appBar: AppGradientBar(
         title: Text(LocaleKeys.categories.tr()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),

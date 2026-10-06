@@ -6,6 +6,10 @@ abstract final class AppColors {
   static const primaryDark = Color(0xFF1D4ED8);
   static const primaryLight = Color(0xFF60A5FA);
 
+  // AppBar gradient
+  static const gradientStart = Color(0xFF64B5F6);
+  static const gradientEnd = Color(0xFF1565C0);
+
   // Accent (prices, highlights)
   static const accent = Color(0xFFF59E0B);
 

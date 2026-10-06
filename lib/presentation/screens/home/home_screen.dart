@@ -9,6 +9,7 @@ import '../../../core/utils/app_extensions.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../domain/entities/product.dart';
 import '../../widgets/app_empty_widget.dart';
+import '../../widgets/app_gradient_bar.dart';
 import '../../widgets/settings_bottom_sheet.dart';
 import 'widgets/banner_carousel.dart';
 import 'widgets/category_filter_bar.dart';
@@ -101,8 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: context.isDark
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
-      appBar: AppBar(
-        title: const SizedBox.shrink(),
+      appBar: AppGradientBar(
         actions: [
           IconButton(
             icon: const Icon(Icons.grid_view_rounded),
