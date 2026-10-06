@@ -31,6 +31,7 @@ abstract final class LocaleKeys {
   static const category = 'category';
   static const categories = 'categories';
   static const searchCategoriesHint = 'searchCategoriesHint';
+  static const addToCart = 'addToCart';
   static const cancel = 'cancel';
   static const recentSearches = 'recentSearches';
   static const clearAll = 'clearAll';

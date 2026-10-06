@@ -39,5 +39,6 @@
   "bannerNewTitle": "New Arrivals",
   "bannerNewSubtitle": "Fresh products every day",
   "bannerShipTitle": "Free Shipping",
-  "bannerShipSubtitle": "On orders over $50"
+  "bannerShipSubtitle": "On orders over $50",
+  "addToCart": "Add to Cart"
 }

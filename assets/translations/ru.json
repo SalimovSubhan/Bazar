@@ -39,5 +39,6 @@
   "bannerNewTitle": "Новые поступления",
   "bannerNewSubtitle": "Свежие товары каждый день",
   "bannerShipTitle": "Бесплатная доставка",
-  "bannerShipSubtitle": "При заказе от $50"
+  "bannerShipSubtitle": "При заказе от $50",
+  "addToCart": "В корзину"
 }
