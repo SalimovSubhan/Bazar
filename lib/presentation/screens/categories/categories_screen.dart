@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
@@ -49,7 +50,7 @@ class _CategoriesViewState extends State<_CategoriesView> {
       body: BlocBuilder<CategoriesBloc, CategoriesState>(
         builder: (context, state) {
           if (state is CategoriesLoading || state is CategoriesInitial) {
-            return const Center(child: CircularProgressIndicator());
+            return _ShimmerGrid(isDark: isDark);
           }
           if (state is CategoriesError) {
             return Center(
@@ -121,6 +122,42 @@ class _CategoriesViewState extends State<_CategoriesView> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ShimmerGrid extends StatelessWidget {
+  final bool isDark;
+
+  const _ShimmerGrid({required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final baseColor =
+        isDark ? AppColors.shimmerBaseDark : AppColors.shimmerBaseLight;
+    final highlightColor =
+        isDark ? AppColors.shimmerHighDark : AppColors.shimmerHighLight;
+
+    return Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: GridView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          childAspectRatio: 0.9,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        itemCount: 18,
+        itemBuilder: (_, __) => Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
     );
   }
