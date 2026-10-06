@@ -6,6 +6,7 @@ abstract final class LocaleKeys {
   static const allCategories = 'allCategories';
   static const noResults = 'noResults';
   static const noResultsDescription = 'noResultsDescription';
+  static const noMoreProducts = 'noMoreProducts';
   static const emptyFavorites = 'emptyFavorites';
   static const emptyFavoritesDescription = 'emptyFavoritesDescription';
   static const errorTitle = 'errorTitle';

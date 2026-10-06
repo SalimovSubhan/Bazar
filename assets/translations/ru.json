@@ -5,6 +5,7 @@
   "searchHint": "Поиск товаров...",
   "allCategories": "Все",
   "noResults": "Товары не найдены",
+  "noMoreProducts": "Больше товаров нет",
   "noResultsDescription": "Попробуйте другой запрос",
   "emptyFavorites": "Избранное пусто",
   "emptyFavoritesDescription": "Нажмите на значок сердца, чтобы сохранить товар",

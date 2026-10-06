@@ -5,6 +5,7 @@
   "searchHint": "Search products...",
   "allCategories": "All",
   "noResults": "No products found",
+  "noMoreProducts": "You've seen all products",
   "noResultsDescription": "Try a different search term",
   "emptyFavorites": "No favorites yet",
   "emptyFavoritesDescription": "Tap the heart icon on any product to save it here",

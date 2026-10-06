@@ -239,7 +239,19 @@ class _HomeViewState extends State<_HomeView> {
                     height: 100,
                     child: state.isLoadingMore
                         ? const Center(child: CircularProgressIndicator())
-                        : const SizedBox.shrink(),
+                        : !state.hasMore
+                            ? Center(
+                                child: Text(
+                                  LocaleKeys.noMoreProducts.tr(),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: context.isDark
+                                        ? AppColors.subtitleDark
+                                        : AppColors.subtitleLight,
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
                   ),
                 ),
               ],
