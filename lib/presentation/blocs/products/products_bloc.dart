@@ -72,7 +72,9 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
         isLoadingMore: false,
       ));
     } catch (e) {
-      emit(state.copyWith(isLoadingMore: false));
+      // Stop further attempts — scroll listener won't fire again.
+      // Pull-to-refresh resets hasMore from the real API response.
+      emit(state.copyWith(isLoadingMore: false, hasMore: false));
     }
   }
 

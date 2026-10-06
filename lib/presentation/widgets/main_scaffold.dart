@@ -45,29 +45,29 @@ class _OfflineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ConnectivityCubit, bool>(
       builder: (context, isOnline) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOut,
-          height: isOnline ? 0 : 36,
-          color: const Color(0xFFF59E0B),
-          child: isOnline
-              ? const SizedBox.shrink()
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.wifi_off_rounded,
-                        size: 14, color: Colors.white),
-                    const SizedBox(width: 6),
-                    Text(
-                      LocaleKeys.offlineBanner.tr(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+        return ClipRect(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+            height: isOnline ? 0 : 36,
+            color: const Color(0xFFF59E0B),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.wifi_off_rounded,
+                    size: 14, color: Colors.white),
+                const SizedBox(width: 6),
+                Text(
+                  LocaleKeys.offlineBanner.tr(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
+              ],
+            ),
+          ),
         );
       },
     );
