@@ -107,7 +107,6 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
                 ProductDetailLoading() =>
                   const Center(child: CircularProgressIndicator()),
                 ProductDetailError() => _ErrorBody(
-                    message: detailState.message,
                     onRetry: () => context
                         .read<ProductDetailBloc>()
                         .add(ProductDetailLoadRequested(widget.productId)),
@@ -128,10 +127,9 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
 // ─── Error body ────────────────────────────────────────────────────────────────
 
 class _ErrorBody extends StatelessWidget {
-  final String message;
   final VoidCallback onRetry;
 
-  const _ErrorBody({required this.message, required this.onRetry});
+  const _ErrorBody({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +153,7 @@ class _ErrorBody extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+              LocaleKeys.errorDescription.tr(),
               style:
                   context.textTheme.bodyMedium?.copyWith(color: subtitleColor),
               textAlign: TextAlign.center,
