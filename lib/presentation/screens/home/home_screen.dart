@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
+import '../../../core/utils/toast.dart';
 import '../../../injection_container.dart';
 import '../../blocs/categories/categories_bloc.dart';
 import '../../blocs/products/products_bloc.dart';
@@ -100,7 +101,12 @@ class _HomeViewState extends State<_HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductsBloc, ProductsState>(
+    return BlocConsumer<ProductsBloc, ProductsState>(
+      listenWhen: (prev, curr) =>
+          prev.isLoadingMore && !curr.isLoadingMore && !curr.hasMore,
+      listener: (context, state) {
+        Toast.show(LocaleKeys.noMoreProducts.tr());
+      },
       builder: (context, state) => Scaffold(
         backgroundColor: context.isDark
             ? AppColors.backgroundDark
@@ -239,19 +245,7 @@ class _HomeViewState extends State<_HomeView> {
                     height: 100,
                     child: state.isLoadingMore
                         ? const Center(child: CircularProgressIndicator())
-                        : !state.hasMore
-                            ? Center(
-                                child: Text(
-                                  LocaleKeys.noMoreProducts.tr(),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: context.isDark
-                                        ? AppColors.subtitleDark
-                                        : AppColors.subtitleLight,
-                                  ),
-                                ),
-                              )
-                            : const SizedBox.shrink(),
+                        : const SizedBox.shrink(),
                   ),
                 ),
               ],
