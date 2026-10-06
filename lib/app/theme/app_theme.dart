@@ -39,7 +39,10 @@ abstract final class AppTheme {
           backgroundColor: AppColors.surfaceLight,
           foregroundColor: AppColors.onSurfaceLight,
           surfaceTintColor: Colors.transparent,
-          shadowColor: AppColors.borderLight,
+          shadowColor: Colors.transparent,
+          shape: Border(
+            bottom: BorderSide(color: AppColors.borderLight, width: 1),
+          ),
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarIconBrightness: Brightness.dark,
@@ -152,7 +155,10 @@ abstract final class AppTheme {
           backgroundColor: AppColors.surfaceDark,
           foregroundColor: AppColors.onSurfaceDark,
           surfaceTintColor: Colors.transparent,
-          shadowColor: AppColors.borderDark,
+          shadowColor: Colors.transparent,
+          shape: Border(
+            bottom: BorderSide(color: AppColors.borderDark, width: 1),
+          ),
           systemOverlayStyle: SystemUiOverlayStyle(
             statusBarColor: Colors.transparent,
             statusBarIconBrightness: Brightness.light,
