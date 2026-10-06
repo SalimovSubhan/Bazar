@@ -63,9 +63,10 @@ class _HomeViewState extends State<_HomeView> {
 
   void _onScroll() {
     final pos = _scrollController.position;
-    if (pos.pixels >= pos.maxScrollExtent - 300) {
-      context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());
-    }
+    if (pos.pixels < pos.maxScrollExtent - 300) return;
+    final state = context.read<ProductsBloc>().state;
+    if (state.isLoadingMore || !state.hasMore || state.isLoading) return;
+    context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());
   }
 
   void _toggleFavorite(int id) {
