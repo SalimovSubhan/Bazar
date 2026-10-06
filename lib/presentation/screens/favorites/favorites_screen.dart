@@ -108,22 +108,7 @@ class FavoritesScreen extends StatelessWidget {
             ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Center(
-              child: Text(
-                '${state.favorites.length} ${state.favorites.length == 1 ? 'item' : 'items'}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: context.isDark
-                      ? AppColors.subtitleDark
-                      : AppColors.subtitleLight,
-                ),
-              ),
-            ),
-          ),
-        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
       ],
     );
   }
