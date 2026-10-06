@@ -36,8 +36,10 @@ class _CategoriesViewState extends State<_CategoriesView> {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final bgColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final subtitleColor = isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
+    final bgColor =
+        isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final subtitleColor =
+        isDark ? AppColors.subtitleDark : AppColors.subtitleLight;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -47,12 +49,6 @@ class _CategoriesViewState extends State<_CategoriesView> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () => context.push(AppRoutes.search),
-          ),
-        ],
       ),
       body: BlocBuilder<CategoriesBloc, CategoriesState>(
         builder: (context, state) {
@@ -85,7 +81,8 @@ class _CategoriesViewState extends State<_CategoriesView> {
           final filtered = _query.isEmpty
               ? all
               : all
-                  .where((c) => c.replaceAll('-', ' ').contains(_query.toLowerCase()))
+                  .where((c) =>
+                      c.replaceAll('-', ' ').contains(_query.toLowerCase()))
                   .toList();
 
           return Column(
@@ -94,6 +91,8 @@ class _CategoriesViewState extends State<_CategoriesView> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: TextField(
                   onChanged: (q) => setState(() => _query = q),
+                  onTap: () => context.push(AppRoutes.search),
+                  readOnly: true,
                   style: context.textTheme.bodyMedium,
                   decoration: InputDecoration(
                     hintText: LocaleKeys.searchCategoriesHint.tr(),
