@@ -27,5 +27,13 @@
   "reviews": "отзывов",
   "price": "Цена",
   "stock": "в наличии",
-  "category": "Категория"
+  "category": "Категория",
+  "categories": "Категории",
+  "searchCategoriesHint": "Поиск категорий...",
+  "bannerSaleTitle": "Большая распродажа",
+  "bannerSaleSubtitle": "Скидки до 50% на всё",
+  "bannerNewTitle": "Новые поступления",
+  "bannerNewSubtitle": "Свежие товары каждый день",
+  "bannerShipTitle": "Бесплатная доставка",
+  "bannerShipSubtitle": "При заказе от $50"
 }

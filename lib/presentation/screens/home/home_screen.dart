@@ -10,6 +10,7 @@ import '../../../core/utils/debouncer.dart';
 import '../../../domain/entities/product.dart';
 import '../../widgets/app_empty_widget.dart';
 import '../../widgets/settings_bottom_sheet.dart';
+import 'widgets/banner_carousel.dart';
 import 'widgets/category_filter_bar.dart';
 import 'widgets/product_card.dart';
 import 'widgets/product_search_bar.dart';
@@ -81,6 +82,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ));
   }
 
+  Future<void> _openCategories() async {
+    final result = await context.push<String>(AppRoutes.categories);
+    if (result != null && mounted) {
+      setState(() => _selectedCategory = result);
+    }
+  }
+
   Future<void> _onRefresh() async {
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 800));
@@ -94,24 +102,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ? AppColors.backgroundDark
           : AppColors.backgroundLight,
       appBar: AppBar(
-        title: RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: 'Bazar',
-                style: context.textTheme.headlineMedium?.copyWith(
-                  color: context.isDark
-                      ? AppColors.primaryLight
-                      : AppColors.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
+        title: const SizedBox.shrink(),
         actions: [
           IconButton(
-            icon: const Icon(Icons.tune_rounded),
+            icon: const Icon(Icons.grid_view_rounded),
+            tooltip: LocaleKeys.categories.tr(),
+            onPressed: _openCategories,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
             tooltip: LocaleKeys.settings.tr(),
             onPressed: () => showSettingsSheet(context),
           ),
@@ -121,23 +120,22 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search
+          // Search bar
           ProductSearchBar(
             onChanged: (q) =>
                 _debouncer(() => setState(() => _searchQuery = q)),
           ),
-          // Categories
+          // Category chips
           CategoryFilterBar(
             categories: mockCategories,
             selectedCategory: _selectedCategory,
             onSelected: (cat) => setState(() => _selectedCategory = cat),
           ),
-          const SizedBox(height: 4),
-          // Grid
+          // Scrollable content
           Expanded(
             child: _isLoading
                 ? _buildShimmerGrid()
-                : _buildProductGrid(),
+                : _buildContent(),
           ),
         ],
       ),
@@ -161,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProductGrid() {
+  Widget _buildContent() {
     final products = _filteredProducts;
 
     if (products.isEmpty) {
@@ -175,26 +173,36 @@ class _HomeScreenState extends State<HomeScreen> {
     return RefreshIndicator(
       onRefresh: _onRefresh,
       color: AppColors.primary,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.63,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+      child: CustomScrollView(
+        slivers: [
+          // Banner
+          const SliverToBoxAdapter(child: BannerCarousel()),
+          // Products grid
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.63,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final product = products[index];
+                  return ProductCard(
+                    product: product,
+                    isFavorite: _favorites.contains(product.id),
+                    onFavoriteTap: () => _toggleFavorite(product.id),
+                    onTap: () => context
+                        .push(AppRoutes.productDetailPath(product.id)),
+                  );
+                },
+                childCount: products.length,
+              ),
+            ),
           ),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return ProductCard(
-              product: product,
-              isFavorite: _favorites.contains(product.id),
-              onFavoriteTap: () => _toggleFavorite(product.id),
-              onTap: () => context.push(AppRoutes.productDetailPath(product.id)),
-            );
-          },
-        ),
+        ],
       ),
     );
   }

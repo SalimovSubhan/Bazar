@@ -27,5 +27,13 @@
   "reviews": "reviews",
   "price": "Price",
   "stock": "in stock",
-  "category": "Category"
+  "category": "Category",
+  "categories": "Categories",
+  "searchCategoriesHint": "Search categories...",
+  "bannerSaleTitle": "Big Sale Today",
+  "bannerSaleSubtitle": "Up to 50% off on all items",
+  "bannerNewTitle": "New Arrivals",
+  "bannerNewSubtitle": "Fresh products every day",
+  "bannerShipTitle": "Free Shipping",
+  "bannerShipSubtitle": "On orders over $50"
 }

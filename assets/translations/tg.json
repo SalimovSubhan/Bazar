@@ -27,5 +27,13 @@
   "reviews": "шарҳҳо",
   "price": "Нарх",
   "stock": "дар захира",
-  "category": "Гурӯҳ"
+  "category": "Гурӯҳ",
+  "categories": "Гурӯҳҳо",
+  "searchCategoriesHint": "Ҷустуҷӯи гурӯҳҳо...",
+  "bannerSaleTitle": "Фурӯши бузург",
+  "bannerSaleSubtitle": "То 50% тахфиф аз ҳама чиз",
+  "bannerNewTitle": "Молҳои нав",
+  "bannerNewSubtitle": "Молҳои тоза ҳар рӯз",
+  "bannerShipTitle": "Интиқоли ройгон",
+  "bannerShipSubtitle": "Барои фармоиш аз $50"
 }

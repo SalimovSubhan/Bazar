@@ -28,4 +28,12 @@ abstract final class LocaleKeys {
   static const price = 'price';
   static const stock = 'stock';
   static const category = 'category';
+  static const categories = 'categories';
+  static const searchCategoriesHint = 'searchCategoriesHint';
+  static const bannerSaleTitle = 'bannerSaleTitle';
+  static const bannerSaleSubtitle = 'bannerSaleSubtitle';
+  static const bannerNewTitle = 'bannerNewTitle';
+  static const bannerNewSubtitle = 'bannerNewSubtitle';
+  static const bannerShipTitle = 'bannerShipTitle';
+  static const bannerShipSubtitle = 'bannerShipSubtitle';
 }
