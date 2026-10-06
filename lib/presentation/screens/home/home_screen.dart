@@ -9,6 +9,7 @@ import '../../../core/utils/app_extensions.dart';
 import '../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../injection_container.dart';
 import '../../blocs/categories/categories_bloc.dart';
+import '../../blocs/favorites/favorites_bloc.dart';
 import '../../blocs/products/products_bloc.dart';
 import '../../widgets/app_empty_widget.dart';
 import '../../widgets/app_error_widget.dart';
@@ -48,7 +49,6 @@ class _HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<_HomeView> {
-  final Set<int> _favorites = {};
   late final ScrollController _scrollController;
 
   @override
@@ -83,23 +83,16 @@ class _HomeViewState extends State<_HomeView> {
     context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());
   }
 
-  void _toggleFavorite(int id) {
-    setState(() {
-      if (_favorites.contains(id)) {
-        _favorites.remove(id);
-        _showSnack(LocaleKeys.removedFromFavorites.tr());
-      } else {
-        _favorites.add(id);
-        _showSnack(LocaleKeys.addedToFavorites.tr());
-      }
-    });
-  }
-
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context)
+  void _toggleFavorite(BuildContext ctx, product) {
+    final favBloc = ctx.read<FavoritesBloc>();
+    final wasAdded = !favBloc.state.isFavorite(product.id);
+    favBloc.add(FavoriteToggleRequested(product));
+    ScaffoldMessenger.of(ctx)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
-        content: Text(msg),
+        content: Text(wasAdded
+            ? LocaleKeys.addedToFavorites.tr()
+            : LocaleKeys.removedFromFavorites.tr()),
         duration: const Duration(seconds: 2),
       ));
   }
@@ -129,7 +122,6 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   Widget _buildBody(BuildContext context, ProductsState state) {
-    // Full-screen shimmer only on very first load (app just opened)
     if (!state.isInitialized && state.isLoading) return _buildShimmer();
 
     if (state.hasError && state.products.isEmpty) {
@@ -174,11 +166,11 @@ class _HomeViewState extends State<_HomeView> {
 
         return RefreshIndicator(
           onRefresh: () async {
-              final bloc = context.read<ProductsBloc>();
-              if (!bloc.state.hasMore) return;
-              bloc.add(const ProductsRefreshRequested());
-              await bloc.stream.firstWhere((s) => !s.isLoading);
-            },
+            final bloc = context.read<ProductsBloc>();
+            if (!bloc.state.hasMore) return;
+            bloc.add(const ProductsRefreshRequested());
+            await bloc.stream.firstWhere((s) => !s.isLoading);
+          },
           color: AppColors.primary,
           child: CustomScrollView(
             controller: _scrollController,
@@ -193,7 +185,7 @@ class _HomeViewState extends State<_HomeView> {
                 ),
               ),
               const SliverToBoxAdapter(child: BannerCarousel()),
-              // Shimmer grid when category loading (isInitialized = true, products cleared)
+
               if (state.isLoading && state.products.isEmpty)
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
@@ -211,7 +203,6 @@ class _HomeViewState extends State<_HomeView> {
                     ),
                   ),
                 )
-              // Empty state inside the scroll view
               else if (!state.isLoading && state.products.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -221,30 +212,33 @@ class _HomeViewState extends State<_HomeView> {
                     subtitle: LocaleKeys.noResultsDescription.tr(),
                   ),
                 )
-              // Normal products grid
               else ...[
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.63,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final product = state.products[index];
-                        return ProductCard(
-                          product: product,
-                          isFavorite: _favorites.contains(product.id),
-                          onFavoriteTap: () => _toggleFavorite(product.id),
-                          onTap: () => context
-                              .push(AppRoutes.productDetailPath(product.id)),
-                        );
-                      },
-                      childCount: state.products.length,
+                // Products grid — reacts to FavoritesBloc changes
+                BlocBuilder<FavoritesBloc, FavoritesState>(
+                  builder: (context, favState) => SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.63,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final product = state.products[index];
+                          return ProductCard(
+                            product: product,
+                            isFavorite: favState.isFavorite(product.id),
+                            onFavoriteTap: () =>
+                                _toggleFavorite(context, product),
+                            onTap: () => context.push(
+                                AppRoutes.productDetailPath(product.id)),
+                          );
+                        },
+                        childCount: state.products.length,
+                      ),
                     ),
                   ),
                 ),

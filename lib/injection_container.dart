@@ -3,14 +3,21 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/dio_client.dart';
 import 'core/utils/scroll_to_top_notifier.dart';
+import 'data/datasources/favorite_local_datasource.dart';
 import 'data/datasources/product_remote_datasource.dart';
+import 'data/local/app_database.dart';
+import 'data/repositories/favorite_repository_impl.dart';
 import 'data/repositories/product_repository_impl.dart';
+import 'domain/repositories/favorite_repository.dart';
 import 'domain/repositories/product_repository.dart';
 import 'domain/usecases/get_categories_usecase.dart';
+import 'domain/usecases/get_favorites_usecase.dart';
 import 'domain/usecases/get_product_by_id_usecase.dart';
 import 'domain/usecases/get_products_usecase.dart';
 import 'domain/usecases/search_products_usecase.dart';
+import 'domain/usecases/toggle_favorite_usecase.dart';
 import 'presentation/blocs/categories/categories_bloc.dart';
+import 'presentation/blocs/favorites/favorites_bloc.dart';
 import 'presentation/blocs/product_detail/product_detail_bloc.dart';
 import 'presentation/blocs/products/products_bloc.dart';
 import 'presentation/blocs/theme/theme_cubit.dart';
@@ -24,12 +31,23 @@ Future<void> initDependencies() async {
   sl.registerSingleton<SharedPreferences>(prefs);
   sl.registerSingleton<Dio>(createDio());
 
-  // Data
+  // Local DB
+  sl.registerSingleton<AppDatabase>(AppDatabase());
+
+  // Data sources
   sl.registerLazySingleton<ProductRemoteDataSource>(
     () => ProductRemoteDataSource(sl()),
   );
+  sl.registerLazySingleton<FavoriteLocalDataSource>(
+    () => FavoriteLocalDataSource(sl()),
+  );
+
+  // Repositories
   sl.registerLazySingleton<ProductRepository>(
     () => ProductRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<FavoriteRepository>(
+    () => FavoriteRepositoryImpl(sl()),
   );
 
   // Use cases
@@ -37,6 +55,8 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => GetProductByIdUseCase(sl()));
   sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
   sl.registerLazySingleton(() => SearchProductsUseCase(sl()));
+  sl.registerLazySingleton(() => GetFavoritesUseCase(sl()));
+  sl.registerLazySingleton(() => ToggleFavoriteUseCase(sl()));
 
   // BLoCs
   sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl()));
@@ -48,5 +68,10 @@ Future<void> initDependencies() async {
   );
   sl.registerFactory<CategoriesBloc>(
     () => CategoriesBloc(getCategories: sl()),
+  );
+  // Favorites is a singleton BLoC — subscribed once and shared across screens
+  sl.registerSingleton<FavoritesBloc>(
+    FavoritesBloc(getFavorites: sl(), toggleFavorite: sl())
+      ..add(const FavoritesSubscribed()),
   );
 }

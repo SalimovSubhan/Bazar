@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../core/utils/fallback_localizations.dart';
 import '../injection_container.dart';
+import '../presentation/blocs/favorites/favorites_bloc.dart';
 import '../presentation/blocs/theme/theme_cubit.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
@@ -12,8 +13,13 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<ThemeCubit>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<ThemeCubit>()),
+        // FavoritesBloc is a singleton — available in every screen including
+        // ProductDetailScreen which lives outside the StatefulShellRoute.
+        BlocProvider.value(value: sl<FavoritesBloc>()),
+      ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {
           return MaterialApp.router(
@@ -24,10 +30,10 @@ class App extends StatelessWidget {
             themeMode: themeMode,
             locale: context.locale,
             localizationsDelegates: [
-                  ...context.localizationDelegates,
-                  const FallbackMaterialLocalizationsDelegate(),
-                  const FallbackCupertinoLocalizationsDelegate(),
-                ],
+              ...context.localizationDelegates,
+              const FallbackMaterialLocalizationsDelegate(),
+              const FallbackCupertinoLocalizationsDelegate(),
+            ],
             supportedLocales: context.supportedLocales,
             routerConfig: appRouter,
           );

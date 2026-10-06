@@ -9,6 +9,7 @@ import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../domain/entities/product.dart';
 import '../../../injection_container.dart';
+import '../../blocs/favorites/favorites_bloc.dart';
 import '../../blocs/product_detail/product_detail_bloc.dart';
 import '../../widgets/app_gradient_bar.dart';
 
@@ -36,73 +37,88 @@ class _ProductDetailView extends StatefulWidget {
 }
 
 class _ProductDetailViewState extends State<_ProductDetailView> {
-  bool _isFavorite = false;
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ProductDetailBloc, ProductDetailState>(
-      builder: (context, state) {
-        final product =
-            state is ProductDetailLoaded ? state.product : null;
+      builder: (context, detailState) {
+        final product = detailState is ProductDetailLoaded
+            ? detailState.product
+            : null;
 
-        return Scaffold(
-          backgroundColor: context.isDark
-              ? AppColors.backgroundDark
-              : AppColors.backgroundLight,
-          appBar: AppGradientBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => context.pop(),
-            ),
-            title: product != null
-                ? Text(
-                    product.title,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                : null,
-            actions: product != null
-                ? [
-                    IconButton(
-                      icon: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
-                        transitionBuilder: (child, anim) => ScaleTransition(
-                          scale: anim,
-                          child: child,
+        return BlocBuilder<FavoritesBloc, FavoritesState>(
+          builder: (context, favState) {
+            final isFavorite =
+                product != null && favState.isFavorite(product.id);
+
+            return Scaffold(
+              backgroundColor: context.isDark
+                  ? AppColors.backgroundDark
+                  : AppColors.backgroundLight,
+              appBar: AppGradientBar(
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  onPressed: () => context.pop(),
+                ),
+                title: product != null
+                    ? Text(
+                        product.title,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    : null,
+                actions: product != null
+                    ? [
+                        IconButton(
+                          icon: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            transitionBuilder: (child, anim) =>
+                                ScaleTransition(scale: anim, child: child),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              key: ValueKey(isFavorite),
+                              color: isFavorite
+                                  ? Colors.redAccent
+                                  : Colors.white,
+                            ),
+                          ),
+                          onPressed: () {
+                            context
+                                .read<FavoritesBloc>()
+                                .add(FavoriteToggleRequested(product));
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(SnackBar(
+                                content: Text(isFavorite
+                                    ? LocaleKeys.removedFromFavorites.tr()
+                                    : LocaleKeys.addedToFavorites.tr()),
+                                duration: const Duration(seconds: 2),
+                              ));
+                          },
                         ),
-                        child: Icon(
-                          _isFavorite
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          key: ValueKey(_isFavorite),
-                          color: _isFavorite
-                              ? Colors.redAccent
-                              : Colors.white,
-                        ),
-                      ),
-                      onPressed: () =>
-                          setState(() => _isFavorite = !_isFavorite),
-                    ),
-                  ]
-                : null,
-          ),
-          body: switch (state) {
-            ProductDetailInitial() ||
-            ProductDetailLoading() =>
-              const Center(child: CircularProgressIndicator()),
-            ProductDetailError() => _ErrorBody(
-                message: state.message,
-                onRetry: () => context
-                    .read<ProductDetailBloc>()
-                    .add(ProductDetailLoadRequested(widget.productId)),
+                      ]
+                    : null,
               ),
-            ProductDetailLoaded() =>
-              _ProductBody(product: state.product),
+              body: switch (detailState) {
+                ProductDetailInitial() ||
+                ProductDetailLoading() =>
+                  const Center(child: CircularProgressIndicator()),
+                ProductDetailError() => _ErrorBody(
+                    message: detailState.message,
+                    onRetry: () => context
+                        .read<ProductDetailBloc>()
+                        .add(ProductDetailLoadRequested(widget.productId)),
+                  ),
+                ProductDetailLoaded() =>
+                  _ProductBody(product: detailState.product),
+              },
+              bottomNavigationBar:
+                  product != null ? _BottomBar(product: product) : null,
+            );
           },
-          bottomNavigationBar:
-              product != null ? _BottomBar(product: product) : null,
         );
       },
     );
