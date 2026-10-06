@@ -120,18 +120,12 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search bar
+          // Fixed search bar — does not scroll
           ProductSearchBar(
             onChanged: (q) =>
                 _debouncer(() => setState(() => _searchQuery = q)),
           ),
-          // Category chips
-          CategoryFilterBar(
-            categories: mockCategories,
-            selectedCategory: _selectedCategory,
-            onSelected: (cat) => setState(() => _selectedCategory = cat),
-          ),
-          // Scrollable content
+          // Everything below scrolls together
           Expanded(
             child: _isLoading
                 ? _buildShimmerGrid()
@@ -175,6 +169,14 @@ class _HomeScreenState extends State<HomeScreen> {
       color: AppColors.primary,
       child: CustomScrollView(
         slivers: [
+          // Category chips — scrolls with content
+          SliverToBoxAdapter(
+            child: CategoryFilterBar(
+              categories: mockCategories,
+              selectedCategory: _selectedCategory,
+              onSelected: (cat) => setState(() => _selectedCategory = cat),
+            ),
+          ),
           // Banner
           const SliverToBoxAdapter(child: BannerCarousel()),
           // Products grid
