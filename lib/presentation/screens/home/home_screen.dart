@@ -208,9 +208,9 @@ class _HomeViewState extends State<_HomeView> {
                   ),
                 )
               // Normal products grid
-              else
+              else ...[
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -221,14 +221,6 @@ class _HomeViewState extends State<_HomeView> {
                     ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        if (index == state.products.length) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
                         final product = state.products[index];
                         return ProductCard(
                           product: product,
@@ -238,11 +230,19 @@ class _HomeViewState extends State<_HomeView> {
                               .push(AppRoutes.productDetailPath(product.id)),
                         );
                       },
-                      childCount: state.products.length +
-                          (state.isLoadingMore ? 1 : 0),
+                      childCount: state.products.length,
                     ),
                   ),
                 ),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 100,
+                    child: state.isLoadingMore
+                        ? const Center(child: CircularProgressIndicator())
+                        : const SizedBox.shrink(),
+                  ),
+                ),
+              ],
             ],
           ),
         );
