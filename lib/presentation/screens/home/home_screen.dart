@@ -16,7 +16,8 @@ import '../../widgets/settings_bottom_sheet.dart';
 import 'widgets/banner_carousel.dart';
 import 'widgets/category_filter_bar.dart';
 import 'widgets/product_card.dart';
-import 'widgets/shimmer_product_card.dart';
+import 'widgets/shimmer_product_card.dart'
+    show ShimmerProductCard, ShimmerCategoryBar, ShimmerBanner;
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -128,19 +129,27 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   Widget _buildShimmer() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.63,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+    return CustomScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      slivers: [
+        const SliverToBoxAdapter(child: ShimmerCategoryBar()),
+        const SliverToBoxAdapter(child: ShimmerBanner()),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.63,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (_, __) => const ShimmerProductCard(),
+              childCount: 6,
+            ),
+          ),
         ),
-        itemCount: 6,
-        itemBuilder: (_, __) => const ShimmerProductCard(),
-      ),
+      ],
     );
   }
 
