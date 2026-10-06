@@ -151,8 +151,11 @@ class _HomeViewState extends State<_HomeView> {
             catState is CategoriesLoaded ? catState.categories : <String>[];
 
         return RefreshIndicator(
-          onRefresh: () async =>
-              context.read<ProductsBloc>().add(const ProductsRefreshRequested()),
+          onRefresh: () async {
+              final bloc = context.read<ProductsBloc>();
+              bloc.add(const ProductsRefreshRequested());
+              await bloc.stream.firstWhere((s) => !s.isLoading);
+            },
           color: AppColors.primary,
           child: CustomScrollView(
             controller: _scrollController,

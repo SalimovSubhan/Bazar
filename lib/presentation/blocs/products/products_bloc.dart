@@ -41,7 +41,7 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
     ProductsRefreshRequested event,
     Emitter<ProductsState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true, error: null));
+    emit(state.copyWith(isLoading: true, error: null, products: []));
     try {
       final result = await _getProducts(page: 0, category: state.selectedCategory);
       emit(state.copyWith(
