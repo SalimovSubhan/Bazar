@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
@@ -171,7 +172,7 @@ class _CategoryCard extends StatelessWidget {
     final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     return GestureDetector(
-      onTap: () => context.pop(slug),
+      onTap: () => context.push(AppRoutes.categoryProductsPath(slug)),
       child: Container(
         decoration: BoxDecoration(
           color: cardColor,
