@@ -168,6 +168,7 @@ class _HomeViewState extends State<_HomeView> {
         return RefreshIndicator(
           onRefresh: () async {
               final bloc = context.read<ProductsBloc>();
+              if (!bloc.state.hasMore) return;
               bloc.add(const ProductsRefreshRequested());
               await bloc.stream.firstWhere((s) => !s.isLoading);
             },
