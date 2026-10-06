@@ -115,18 +115,13 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   Widget _buildBody(BuildContext context, ProductsState state) {
-    if (state.isLoading && state.products.isEmpty) return _buildShimmer();
+    // Full-screen shimmer only on very first load (app just opened)
+    if (!state.isInitialized && state.isLoading) return _buildShimmer();
+
     if (state.hasError && state.products.isEmpty) {
       return AppErrorWidget(
         onRetry: () =>
             context.read<ProductsBloc>().add(const ProductsLoadRequested()),
-      );
-    }
-    if (!state.isLoading && state.products.isEmpty) {
-      return AppEmptyWidget(
-        icon: Icons.search_off_rounded,
-        title: LocaleKeys.noResults.tr(),
-        subtitle: LocaleKeys.noResultsDescription.tr(),
       );
     }
     return _buildContent(context, state);
@@ -172,40 +167,70 @@ class _HomeViewState extends State<_HomeView> {
                 ),
               ),
               const SliverToBoxAdapter(child: BannerCarousel()),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
-                sliver: SliverGrid(
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.63,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+              // Shimmer grid when category loading (isInitialized = true, products cleared)
+              if (state.isLoading && state.products.isEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.63,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (_, __) => const ShimmerProductCard(),
+                      childCount: 6,
+                    ),
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      if (index == state.products.length) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: CircularProgressIndicator(),
-                          ),
+                )
+              // Empty state inside the scroll view
+              else if (!state.isLoading && state.products.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: AppEmptyWidget(
+                    icon: Icons.search_off_rounded,
+                    title: LocaleKeys.noResults.tr(),
+                    subtitle: LocaleKeys.noResultsDescription.tr(),
+                  ),
+                )
+              // Normal products grid
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.63,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (index == state.products.length) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        final product = state.products[index];
+                        return ProductCard(
+                          product: product,
+                          isFavorite: _favorites.contains(product.id),
+                          onFavoriteTap: () => _toggleFavorite(product.id),
+                          onTap: () => context
+                              .push(AppRoutes.productDetailPath(product.id)),
                         );
-                      }
-                      final product = state.products[index];
-                      return ProductCard(
-                        product: product,
-                        isFavorite: _favorites.contains(product.id),
-                        onFavoriteTap: () => _toggleFavorite(product.id),
-                        onTap: () => context
-                            .push(AppRoutes.productDetailPath(product.id)),
-                      );
-                    },
-                    childCount:
-                        state.products.length + (state.isLoadingMore ? 1 : 0),
+                      },
+                      childCount: state.products.length +
+                          (state.isLoadingMore ? 1 : 0),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         );

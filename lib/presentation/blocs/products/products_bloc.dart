@@ -30,6 +30,7 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
         currentPage: 0,
         hasMore: result.hasMore,
         isLoading: false,
+        isInitialized: true,
       ));
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));

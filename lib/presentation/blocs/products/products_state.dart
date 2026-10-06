@@ -9,6 +9,8 @@ class ProductsState extends Equatable {
   final bool hasMore;
   final int currentPage;
   final String? error;
+  // true after the very first successful load — used to decide shimmer scope
+  final bool isInitialized;
 
   const ProductsState({
     this.products = const [],
@@ -18,6 +20,7 @@ class ProductsState extends Equatable {
     this.hasMore = true,
     this.currentPage = 0,
     this.error,
+    this.isInitialized = false,
   });
 
   bool get hasError => error != null;
@@ -32,6 +35,7 @@ class ProductsState extends Equatable {
     bool? hasMore,
     int? currentPage,
     Object? error = _sentinel,
+    bool? isInitialized,
   }) {
     return ProductsState(
       products: products ?? this.products,
@@ -43,6 +47,7 @@ class ProductsState extends Equatable {
       hasMore: hasMore ?? this.hasMore,
       currentPage: currentPage ?? this.currentPage,
       error: identical(error, _sentinel) ? this.error : error as String?,
+      isInitialized: isInitialized ?? this.isInitialized,
     );
   }
 
@@ -55,5 +60,6 @@ class ProductsState extends Equatable {
         hasMore,
         currentPage,
         error,
+        isInitialized,
       ];
 }
