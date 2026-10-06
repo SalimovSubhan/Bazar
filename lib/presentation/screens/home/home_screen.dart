@@ -8,7 +8,6 @@ import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../injection_container.dart';
-import '../../../core/services/connectivity_cubit.dart';
 import '../../blocs/categories/categories_bloc.dart';
 import '../../blocs/favorites/favorites_bloc.dart';
 import '../../blocs/products/products_bloc.dart';
@@ -79,7 +78,6 @@ class _HomeViewState extends State<_HomeView> {
   void _onScroll() {
     final pos = _scrollController.position;
     if (pos.pixels < pos.maxScrollExtent - 300) return;
-    if (!context.read<ConnectivityCubit>().state) return;
     final state = context.read<ProductsBloc>().state;
     if (state.isLoadingMore || !state.hasMore || state.isLoading) return;
     context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());
@@ -108,8 +106,19 @@ class _HomeViewState extends State<_HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductsBloc, ProductsState>(
-      builder: (context, state) => Scaffold(
+    return BlocListener<ProductsBloc, ProductsState>(
+      listenWhen: (prev, curr) =>
+          curr.error != null && curr.error != prev.error,
+      listener: (context, state) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            content: Text(LocaleKeys.noInternet.tr()),
+            duration: const Duration(seconds: 3),
+          ));
+      },
+      child: BlocBuilder<ProductsBloc, ProductsState>(
+        builder: (context, state) => Scaffold(
         backgroundColor: context.isDark
             ? AppColors.backgroundDark
             : AppColors.backgroundLight,
@@ -119,6 +128,7 @@ class _HomeViewState extends State<_HomeView> {
           onSettingsTap: () => showSettingsSheet(context),
         ),
         body: _buildBody(context, state),
+      ),
       ),
     );
   }

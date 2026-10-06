@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
-import '../../../core/services/connectivity_cubit.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../injection_container.dart';
 import '../../blocs/favorites/favorites_bloc.dart';
@@ -91,7 +90,6 @@ class _CategoryProductsViewState extends State<_CategoryProductsView> {
   void _onScroll() {
     final pos = _scrollController.position;
     if (pos.pixels < pos.maxScrollExtent - 300) return;
-    if (!context.read<ConnectivityCubit>().state) return;
     final state = context.read<ProductsBloc>().state;
     if (state.isLoadingMore || !state.hasMore || state.isLoading) return;
     context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());
@@ -113,28 +111,40 @@ class _CategoryProductsViewState extends State<_CategoryProductsView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductsBloc, ProductsState>(
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: context.isDark
-              ? AppColors.backgroundDark
-              : AppColors.backgroundLight,
-          appBar: AppGradientBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => context.pop(),
-            ),
-            title: Text(
-              '${widget.emoji}  ${widget.category.titleCase}',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
+    return BlocListener<ProductsBloc, ProductsState>(
+      listenWhen: (prev, curr) =>
+          curr.error != null && curr.error != prev.error,
+      listener: (context, state) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            content: Text(LocaleKeys.noInternet.tr()),
+            duration: const Duration(seconds: 3),
+          ));
+      },
+      child: BlocBuilder<ProductsBloc, ProductsState>(
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: context.isDark
+                ? AppColors.backgroundDark
+                : AppColors.backgroundLight,
+            appBar: AppGradientBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                onPressed: () => context.pop(),
+              ),
+              title: Text(
+                '${widget.emoji}  ${widget.category.titleCase}',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-          body: _buildBody(context, state),
-        );
-      },
+            body: _buildBody(context, state),
+          );
+        },
+      ),
     );
   }
 

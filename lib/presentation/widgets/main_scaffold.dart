@@ -1,10 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../core/constants/locale_keys.dart';
-import '../../core/services/connectivity_cubit.dart';
 import '../../core/utils/scroll_to_top_notifier.dart';
 import '../../injection_container.dart';
 
@@ -16,12 +14,7 @@ class MainScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          const _OfflineBanner(),
-          Expanded(child: shell),
-        ],
-      ),
+      body: shell,
       extendBody: true,
       bottomNavigationBar: _FloatingNavBar(
         selectedIndex: shell.currentIndex,
@@ -32,44 +25,6 @@ class MainScaffold extends StatelessWidget {
           shell.goBranch(i, initialLocation: i == shell.currentIndex);
         },
       ),
-    );
-  }
-}
-
-// ─── Offline banner ───────────────────────────────────────────────────────────
-
-class _OfflineBanner extends StatelessWidget {
-  const _OfflineBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<ConnectivityCubit, bool>(
-      builder: (context, isOnline) {
-        return ClipRect(
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeInOut,
-            height: isOnline ? 0 : 36,
-            color: const Color(0xFFF59E0B),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.wifi_off_rounded,
-                    size: 14, color: Colors.white),
-                const SizedBox(width: 6),
-                Text(
-                  LocaleKeys.offlineBanner.tr(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
