@@ -30,6 +30,9 @@ abstract final class LocaleKeys {
   static const category = 'category';
   static const categories = 'categories';
   static const searchCategoriesHint = 'searchCategoriesHint';
+  static const cancel = 'cancel';
+  static const recentSearches = 'recentSearches';
+  static const clearAll = 'clearAll';
   static const bannerSaleTitle = 'bannerSaleTitle';
   static const bannerSaleSubtitle = 'bannerSaleSubtitle';
   static const bannerNewTitle = 'bannerNewTitle';
