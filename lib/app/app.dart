@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../core/services/connectivity_cubit.dart';
 import '../core/utils/fallback_localizations.dart';
 import '../injection_container.dart';
 import '../presentation/blocs/favorites/favorites_bloc.dart';
@@ -16,9 +17,8 @@ class App extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<ThemeCubit>()),
-        // FavoritesBloc is a singleton — available in every screen including
-        // ProductDetailScreen which lives outside the StatefulShellRoute.
         BlocProvider.value(value: sl<FavoritesBloc>()),
+        BlocProvider.value(value: sl<ConnectivityCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {

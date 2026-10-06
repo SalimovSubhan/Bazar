@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/theme/app_colors.dart';
 import '../../core/constants/locale_keys.dart';
+import '../../core/services/connectivity_cubit.dart';
 import '../../core/utils/scroll_to_top_notifier.dart';
 import '../../injection_container.dart';
 
@@ -14,7 +16,12 @@ class MainScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: shell,
+      body: Column(
+        children: [
+          const _OfflineBanner(),
+          Expanded(child: shell),
+        ],
+      ),
       extendBody: true,
       bottomNavigationBar: _FloatingNavBar(
         selectedIndex: shell.currentIndex,
@@ -28,6 +35,46 @@ class MainScaffold extends StatelessWidget {
     );
   }
 }
+
+// ─── Offline banner ───────────────────────────────────────────────────────────
+
+class _OfflineBanner extends StatelessWidget {
+  const _OfflineBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ConnectivityCubit, bool>(
+      builder: (context, isOnline) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+          height: isOnline ? 0 : 36,
+          color: const Color(0xFFF59E0B),
+          child: isOnline
+              ? const SizedBox.shrink()
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.wifi_off_rounded,
+                        size: 14, color: Colors.white),
+                    const SizedBox(width: 6),
+                    Text(
+                      LocaleKeys.offlineBanner.tr(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+        );
+      },
+    );
+  }
+}
+
+// ─── Floating nav bar ─────────────────────────────────────────────────────────
 
 class _FloatingNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -56,37 +103,37 @@ class _FloatingNavBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.gradientStart, AppColors.gradientEnd],
-          ),
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.gradientEnd.withAlpha(100),
-              blurRadius: 20,
-              spreadRadius: 0,
-              offset: const Offset(0, 8),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        child: Container(
+          height: 64,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.gradientStart, AppColors.gradientEnd],
             ),
-          ],
-        ),
-        child: Row(
-          children: List.generate(_items.length, (i) {
-            return Expanded(
-              child: _NavButton(
-                item: _items[i],
-                selected: selectedIndex == i,
-                onTap: () => onDestinationSelected(i),
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.gradientEnd.withAlpha(100),
+                blurRadius: 20,
+                spreadRadius: 0,
+                offset: const Offset(0, 8),
               ),
-            );
-          }),
+            ],
+          ),
+          child: Row(
+            children: List.generate(_items.length, (i) {
+              return Expanded(
+                child: _NavButton(
+                  item: _items[i],
+                  selected: selectedIndex == i,
+                  onTap: () => onDestinationSelected(i),
+                ),
+              );
+            }),
+          ),
         ),
-      ),
       ),
     );
   }
@@ -137,8 +184,7 @@ class _NavButton extends StatelessWidget {
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
                 fontSize: 11,
-                fontWeight:
-                    selected ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 color: selected ? Colors.white : Colors.white.withAlpha(160),
               ),
               child: Text(item.label.tr()),

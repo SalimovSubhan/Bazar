@@ -1,9 +1,12 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/dio_client.dart';
+import 'core/services/connectivity_cubit.dart';
 import 'core/utils/scroll_to_top_notifier.dart';
 import 'data/datasources/favorite_local_datasource.dart';
+import 'data/datasources/product_local_datasource.dart';
 import 'data/datasources/product_remote_datasource.dart';
 import 'data/local/app_database.dart';
 import 'data/repositories/favorite_repository_impl.dart';
@@ -30,6 +33,7 @@ Future<void> initDependencies() async {
   final prefs = await SharedPreferences.getInstance();
   sl.registerSingleton<SharedPreferences>(prefs);
   sl.registerSingleton<Dio>(createDio());
+  sl.registerSingleton<Connectivity>(Connectivity());
 
   // Local DB
   sl.registerSingleton<AppDatabase>(AppDatabase());
@@ -38,13 +42,16 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ProductRemoteDataSource>(
     () => ProductRemoteDataSource(sl()),
   );
+  sl.registerLazySingleton<ProductLocalDataSource>(
+    () => ProductLocalDataSource(sl()),
+  );
   sl.registerLazySingleton<FavoriteLocalDataSource>(
     () => FavoriteLocalDataSource(sl()),
   );
 
   // Repositories
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(sl()),
+    () => ProductRepositoryImpl(sl(), sl()),
   );
   sl.registerLazySingleton<FavoriteRepository>(
     () => FavoriteRepositoryImpl(sl()),
@@ -58,7 +65,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => GetFavoritesUseCase(sl()));
   sl.registerLazySingleton(() => ToggleFavoriteUseCase(sl()));
 
-  // BLoCs
+  // BLoCs / Cubits
   sl.registerFactory<ThemeCubit>(() => ThemeCubit(sl()));
   sl.registerFactory<ProductsBloc>(
     () => ProductsBloc(getProducts: sl()),
@@ -69,9 +76,10 @@ Future<void> initDependencies() async {
   sl.registerFactory<CategoriesBloc>(
     () => CategoriesBloc(getCategories: sl()),
   );
-  // Favorites is a singleton BLoC — subscribed once and shared across screens
   sl.registerSingleton<FavoritesBloc>(
     FavoritesBloc(getFavorites: sl(), toggleFavorite: sl())
       ..add(const FavoritesSubscribed()),
   );
+  // Singleton so the stream is shared across all screens
+  sl.registerSingleton<ConnectivityCubit>(ConnectivityCubit(sl()));
 }
