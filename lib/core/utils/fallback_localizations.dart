@@ -1,10 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-// Flutter не поддерживает tg (таджикский) в GlobalMaterialLocalizations.
-// Эти делегаты говорят Flutter: "я поддерживаю все локали",
-// и для неизвестных (tg) возвращают русские материал-компоненты.
-
 class FallbackMaterialLocalizationsDelegate
     extends LocalizationsDelegate<MaterialLocalizations> {
   const FallbackMaterialLocalizationsDelegate();
