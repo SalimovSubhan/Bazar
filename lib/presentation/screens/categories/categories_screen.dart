@@ -23,15 +23,8 @@ class CategoriesScreen extends StatelessWidget {
   }
 }
 
-class _CategoriesView extends StatefulWidget {
+class _CategoriesView extends StatelessWidget {
   const _CategoriesView();
-
-  @override
-  State<_CategoriesView> createState() => _CategoriesViewState();
-}
-
-class _CategoriesViewState extends State<_CategoriesView> {
-  String _query = '';
 
   @override
   Widget build(BuildContext context) {
@@ -77,53 +70,58 @@ class _CategoriesViewState extends State<_CategoriesView> {
             );
           }
 
-          final all = (state as CategoriesLoaded).categories;
-          final filtered = _query.isEmpty
-              ? all
-              : all
-                  .where((c) =>
-                      c.replaceAll('-', ' ').contains(_query.toLowerCase()))
-                  .toList();
+          final categories = (state as CategoriesLoaded).categories;
 
           return Column(
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: TextField(
-                  onChanged: (q) => setState(() => _query = q),
+                child: GestureDetector(
                   onTap: () => context.push(AppRoutes.search),
-                  readOnly: true,
-                  style: context.textTheme.bodyMedium,
-                  decoration: InputDecoration(
-                    hintText: LocaleKeys.searchCategoriesHint.tr(),
-                    suffixIcon: Icon(Icons.search_rounded,
-                        color: subtitleColor, size: 20),
+                  child: Container(
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.surfaceDark
+                          : AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search_rounded,
+                            color: subtitleColor, size: 20),
+                        const SizedBox(width: 10),
+                        Text(
+                          LocaleKeys.searchHint.tr(),
+                          style: context.textTheme.bodyMedium
+                              ?.copyWith(color: subtitleColor),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
               Expanded(
-                child: filtered.isEmpty
-                    ? Center(
-                        child: Text(
-                          LocaleKeys.noResults.tr(),
-                          style: context.textTheme.bodyMedium
-                              ?.copyWith(color: subtitleColor),
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 0.9,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          return _CategoryCard(slug: filtered[index]);
-                        },
-                      ),
+                child: GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    childAspectRatio: 0.9,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    return _CategoryCard(slug: categories[index]);
+                  },
+                ),
               ),
             ],
           );
