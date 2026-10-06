@@ -34,7 +34,7 @@ abstract final class AppTheme {
         scaffoldBackgroundColor: AppColors.backgroundLight,
         appBarTheme: const AppBarTheme(
           elevation: 0,
-          scrolledUnderElevation: 1,
+          scrolledUnderElevation: 0,
           centerTitle: false,
           backgroundColor: AppColors.surfaceLight,
           foregroundColor: AppColors.onSurfaceLight,
@@ -147,7 +147,7 @@ abstract final class AppTheme {
         scaffoldBackgroundColor: AppColors.backgroundDark,
         appBarTheme: const AppBarTheme(
           elevation: 0,
-          scrolledUnderElevation: 1,
+          scrolledUnderElevation: 0,
           centerTitle: false,
           backgroundColor: AppColors.surfaceDark,
           foregroundColor: AppColors.onSurfaceDark,
