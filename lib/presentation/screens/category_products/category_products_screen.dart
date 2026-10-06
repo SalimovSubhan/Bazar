@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
+import '../../../core/services/connectivity_cubit.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../injection_container.dart';
 import '../../blocs/favorites/favorites_bloc.dart';
@@ -90,6 +91,7 @@ class _CategoryProductsViewState extends State<_CategoryProductsView> {
   void _onScroll() {
     final pos = _scrollController.position;
     if (pos.pixels < pos.maxScrollExtent - 300) return;
+    if (!context.read<ConnectivityCubit>().state) return;
     final state = context.read<ProductsBloc>().state;
     if (state.isLoadingMore || !state.hasMore || state.isLoading) return;
     context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());

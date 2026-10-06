@@ -8,6 +8,7 @@ import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../injection_container.dart';
+import '../../../core/services/connectivity_cubit.dart';
 import '../../blocs/categories/categories_bloc.dart';
 import '../../blocs/favorites/favorites_bloc.dart';
 import '../../blocs/products/products_bloc.dart';
@@ -78,6 +79,7 @@ class _HomeViewState extends State<_HomeView> {
   void _onScroll() {
     final pos = _scrollController.position;
     if (pos.pixels < pos.maxScrollExtent - 300) return;
+    if (!context.read<ConnectivityCubit>().state) return;
     final state = context.read<ProductsBloc>().state;
     if (state.isLoadingMore || !state.hasMore || state.isLoading) return;
     context.read<ProductsBloc>().add(const ProductsLoadMoreRequested());
