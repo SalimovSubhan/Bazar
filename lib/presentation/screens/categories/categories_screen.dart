@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
@@ -74,44 +73,10 @@ class _CategoriesView extends StatelessWidget {
 
           return Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: GestureDetector(
-                  onTap: () => context.push(AppRoutes.search),
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.surfaceDark
-                          : AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.search_rounded,
-                            color: subtitleColor, size: 20),
-                        const SizedBox(width: 10),
-                        Text(
-                          LocaleKeys.searchHint.tr(),
-                          style: context.textTheme.bodyMedium
-                              ?.copyWith(color: subtitleColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               Expanded(
                 child: GridView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     childAspectRatio: 0.9,
                     crossAxisSpacing: 10,
