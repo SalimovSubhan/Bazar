@@ -1,12 +1,13 @@
 import 'package:go_router/go_router.dart';
+import '../../presentation/screens/favorites/favorites_screen.dart';
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/product_detail/product_detail_screen.dart';
-import '../../presentation/screens/favorites/favorites_screen.dart';
+import '../../presentation/widgets/main_scaffold.dart';
 
 abstract final class AppRoutes {
   static const home = '/';
-  static const productDetail = '/product/:id';
   static const favorites = '/favorites';
+  static const productDetail = '/product/:id';
 
   static String productDetailPath(int id) => '/product/$id';
 }
@@ -14,9 +15,26 @@ abstract final class AppRoutes {
 final appRouter = GoRouter(
   initialLocation: AppRoutes.home,
   routes: [
-    GoRoute(
-      path: AppRoutes.home,
-      builder: (context, state) => const HomeScreen(),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, shell) => MainScaffold(shell: shell),
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (_, __) => const HomeScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.favorites,
+              builder: (_, __) => const FavoritesScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
     GoRoute(
       path: AppRoutes.productDetail,
@@ -24,10 +42,6 @@ final appRouter = GoRouter(
         final id = int.parse(state.pathParameters['id']!);
         return ProductDetailScreen(productId: id);
       },
-    ),
-    GoRoute(
-      path: AppRoutes.favorites,
-      builder: (context, state) => const FavoritesScreen(),
     ),
   ],
 );
