@@ -49,8 +49,10 @@ class _FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+    return SafeArea(
+      top: false,
+      child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Container(
         height: 64,
         decoration: BoxDecoration(
@@ -80,6 +82,7 @@ class _FloatingNavBar extends StatelessWidget {
             );
           }),
         ),
+      ),
       ),
     );
   }
