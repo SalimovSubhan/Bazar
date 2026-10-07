@@ -7,7 +7,6 @@ import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../core/utils/scroll_to_top_notifier.dart';
-import '../../../core/utils/toast.dart';
 import '../../../injection_container.dart';
 import '../../blocs/categories/categories_bloc.dart';
 import '../../blocs/favorites/favorites_bloc.dart';
@@ -50,6 +49,14 @@ class _HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<_HomeView> {
   late final ScrollController _scrollController;
+  String? selectedCategory;
+
+  static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 2,
+    childAspectRatio: 0.63,
+    crossAxisSpacing: 12,
+    mainAxisSpacing: 12,
+  );
 
   @override
   void initState() {
@@ -106,129 +113,88 @@ class _HomeViewState extends State<_HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ProductsBloc, ProductsState>(
-      listenWhen: (prev, curr) =>
-          curr.error != null && curr.error != prev.error,
-      listener: (context, state) {
-        Toast.show(
-          LocaleKeys.noInternet.tr(),
-          type: ToastType.error,
-          duration: const Duration(seconds: 3),
-        );
-      },
-      child: BlocBuilder<ProductsBloc, ProductsState>(
-        builder: (context, state) => Scaffold(
-        backgroundColor: context.isDark
-            ? AppColors.backgroundDark
-            : AppColors.backgroundLight,
-        appBar: HomeAppBar(
-          onCategoryTap: _openCategories,
-          onSearchTap: () => context.push(AppRoutes.search),
-          onSettingsTap: () => showSettingsSheet(context),
-        ),
-        body: _buildBody(context, state),
+    return Scaffold(
+      backgroundColor:
+          context.isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      appBar: HomeAppBar(
+        onCategoryTap: _openCategories,
+        onSearchTap: () => context.push(AppRoutes.search),
+        onSettingsTap: () => showSettingsSheet(context),
       ),
-      ),
-    );
-  }
-
-  Widget _buildBody(BuildContext context, ProductsState state) {
-    if (!state.isInitialized && state.isLoading) return _buildShimmer();
-    return _buildContent(context, state);
-  }
-
-  Widget _buildShimmer() {
-    return CustomScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      slivers: [
-        const SliverToBoxAdapter(child: ShimmerCategoryBar()),
-        const SliverToBoxAdapter(child: ShimmerBanner()),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.63,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (_, __) => const ShimmerProductCard(),
-              childCount: 6,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildContent(BuildContext context, ProductsState state) {
-    return BlocBuilder<CategoriesBloc, CategoriesState>(
-      builder: (context, catState) {
-        final categories =
-            catState is CategoriesLoaded ? catState.categories : <String>[];
-
-        return RefreshIndicator(
-          onRefresh: () async {
-            context.read<CategoriesBloc>().add(const CategoriesLoadRequested());
-            final bloc = context.read<ProductsBloc>();
-            bloc.add(const ProductsRefreshRequested());
-            await bloc.stream.firstWhere((s) => !s.isLoading);
-          },
-          color: AppColors.primary,
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: CategoryFilterBar(
-                  categories: categories,
-                  selectedCategory: state.selectedCategory,
-                  onSelected: (cat) => context
-                      .read<ProductsBloc>()
-                      .add(ProductsCategoryChanged(cat)),
-                ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() => selectedCategory = null);
+          context.read<ProductsBloc>().add(ProductsCategoryChanged(null));
+          context.read<CategoriesBloc>().add(const CategoriesLoadRequested());
+          final bloc = context.read<ProductsBloc>();
+          bloc.add(const ProductsRefreshRequested());
+          await bloc.stream.firstWhere((s) => !s.isLoading);
+        },
+        color: AppColors.primary,
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // Categories + Banners
+            SliverToBoxAdapter(
+              child: BlocBuilder<CategoriesBloc, CategoriesState>(
+                builder: (context, state) {
+                  if (state is CategoriesLoading) {
+                    return const Column(
+                      children: [ShimmerCategoryBar(), ShimmerBanner()],
+                    );
+                  }
+                  if (state is CategoriesLoaded) {
+                    return Column(
+                      children: [
+                        CategoryFilterBar(
+                          categories: state.categories,
+                          selectedCategory: selectedCategory,
+                          onSelected: (cat) {
+                            setState(() => selectedCategory = cat);
+                            context
+                                .read<ProductsBloc>()
+                                .add(ProductsCategoryChanged(cat));
+                          },
+                        ),
+                        const BannerCarousel(),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
-              const SliverToBoxAdapter(child: BannerCarousel()),
+            ),
 
-              if (state.isLoading && state.products.isEmpty)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.63,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+            // Products grid
+            BlocBuilder<ProductsBloc, ProductsState>(
+              builder: (context, state) {
+                if (state.isLoading && state.products.isEmpty) {
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 100),
+                    sliver: SliverGrid(
+                      gridDelegate: _gridDelegate,
+                      delegate: SliverChildBuilderDelegate(
+                        (_, __) => const ShimmerProductCard(),
+                        childCount: 6,
+                      ),
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (_, __) => const ShimmerProductCard(),
-                      childCount: 6,
+                  );
+                }
+                if (state.products.isEmpty && !state.hasError) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: AppEmptyWidget(
+                      icon: Icons.search_off_rounded,
+                      title: LocaleKeys.noResults.tr(),
+                      subtitle: LocaleKeys.noResultsDescription.tr(),
                     ),
-                  ),
-                )
-              else if (!state.isLoading && state.products.isEmpty && !state.hasError)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: AppEmptyWidget(
-                    icon: Icons.search_off_rounded,
-                    title: LocaleKeys.noResults.tr(),
-                    subtitle: LocaleKeys.noResultsDescription.tr(),
-                  ),
-                )
-              else ...[
-                // Products grid — reacts to FavoritesBloc changes
-                BlocBuilder<FavoritesBloc, FavoritesState>(
+                  );
+                }
+                return BlocBuilder<FavoritesBloc, FavoritesState>(
                   builder: (context, favState) => SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
                     sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.63,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
+                      gridDelegate: _gridDelegate,
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final product = state.products[index];
@@ -237,16 +203,25 @@ class _HomeViewState extends State<_HomeView> {
                             isFavorite: favState.isFavorite(product.id),
                             onFavoriteTap: () =>
                                 _toggleFavorite(context, product),
-                            onTap: () => context.push(
-                                AppRoutes.productDetailPath(product.id)),
+                            onTap: () => context
+                                .push(AppRoutes.productDetailPath(product.id)),
                           );
                         },
                         childCount: state.products.length,
                       ),
                     ),
                   ),
-                ),
-                SliverToBoxAdapter(
+                );
+              },
+            ),
+
+            // Load more footer
+            BlocBuilder<ProductsBloc, ProductsState>(
+              builder: (context, state) {
+                if (state.products.isEmpty) {
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+                return SliverToBoxAdapter(
                   child: SizedBox(
                     height: 100,
                     child: state.isLoadingMore
@@ -265,12 +240,12 @@ class _HomeViewState extends State<_HomeView> {
                               )
                             : const SizedBox.shrink(),
                   ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
