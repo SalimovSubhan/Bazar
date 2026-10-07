@@ -22,6 +22,41 @@ abstract final class AppRoutes {
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
+// Slide from right + fade — стандартный push
+CustomTransitionPage<T> _slidePage<T>(LocalKey key, Widget child) =>
+    CustomTransitionPage<T>(
+      key: key,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+      transitionsBuilder: (_, animation, __, child) => SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(1.0, 0.0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+        child: FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: child,
+        ),
+      ),
+    );
+
+// Slide from bottom — для модальных экранов (поиск)
+CustomTransitionPage<T> _slideUpPage<T>(LocalKey key, Widget child) =>
+    CustomTransitionPage<T>(
+      key: key,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 320),
+      reverseTransitionDuration: const Duration(milliseconds: 260),
+      transitionsBuilder: (_, animation, __, child) => SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.0, 1.0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+        child: child,
+      ),
+    );
+
 final appRouter = GoRouter(
   navigatorKey: navigatorKey,
   initialLocation: AppRoutes.home,
@@ -49,25 +84,25 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.categories,
-      builder: (_, __) => const CategoriesScreen(),
+      pageBuilder: (_, state) => _slidePage(state.pageKey, const CategoriesScreen()),
     ),
     GoRoute(
       path: AppRoutes.categoryProducts,
-      builder: (context, state) {
-        final slug = state.pathParameters['slug']!;
-        return CategoryProductsScreen(category: slug);
-      },
+      pageBuilder: (_, state) => _slidePage(
+        state.pageKey,
+        CategoryProductsScreen(category: state.pathParameters['slug']!),
+      ),
     ),
     GoRoute(
       path: AppRoutes.search,
-      builder: (_, __) => const SearchScreen(),
+      pageBuilder: (_, state) => _slideUpPage(state.pageKey, const SearchScreen()),
     ),
     GoRoute(
       path: AppRoutes.productDetail,
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id']!);
-        return ProductDetailScreen(productId: id);
-      },
+      pageBuilder: (_, state) => _slidePage(
+        state.pageKey,
+        ProductDetailScreen(productId: int.parse(state.pathParameters['id']!)),
+      ),
     ),
   ],
 );
