@@ -85,19 +85,9 @@ class _ProductDetailViewState extends State<_ProductDetailView> {
                                   : Colors.white,
                             ),
                           ),
-                          onPressed: () {
-                            context
-                                .read<FavoritesBloc>()
-                                .add(FavoriteToggleRequested(product));
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showSnackBar(SnackBar(
-                                content: Text(isFavorite
-                                    ? LocaleKeys.removedFromFavorites.tr()
-                                    : LocaleKeys.addedToFavorites.tr()),
-                                duration: const Duration(seconds: 2),
-                              ));
-                          },
+                          onPressed: () => context
+                              .read<FavoritesBloc>()
+                              .add(FavoriteToggleRequested(product)),
                         ),
                       ]
                     : null,
