@@ -1,5 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../constants/locale_keys.dart';
+import '../utils/toast.dart';
 
 class AppLogInterceptor extends Interceptor {
   @override
@@ -45,21 +48,34 @@ class AppLogInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (!kDebugMode) return handler.next(err);
+    final isNetworkError = err.type == DioExceptionType.connectionError ||
+        err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.receiveTimeout ||
+        err.type == DioExceptionType.sendTimeout;
 
-    final uri = err.requestOptions.uri;
-    final method = err.requestOptions.method.toUpperCase();
-    final status = err.response?.statusCode ?? err.type.name;
-
-    final buf = StringBuffer();
-    buf.writeln('┌─── ❌ ERROR ────────────────────────────────────────');
-    buf.writeln('│ $status  $method  $uri');
-    buf.writeln('│ Message: ${err.message}');
-    if (err.response?.data != null) {
-      buf.writeln('│ Body: ${_preview(err.response!.data)}');
+    if (isNetworkError) {
+      Toast.show(
+        LocaleKeys.noInternet.tr(),
+        type: ToastType.error,
+        duration: const Duration(seconds: 3),
+      );
     }
-    buf.write('└─────────────────────────────────────────────────────');
-    debugPrint(buf.toString());
+
+    if (kDebugMode) {
+      final uri = err.requestOptions.uri;
+      final method = err.requestOptions.method.toUpperCase();
+      final status = err.response?.statusCode ?? err.type.name;
+
+      final buf = StringBuffer();
+      buf.writeln('┌─── ❌ ERROR ────────────────────────────────────────');
+      buf.writeln('│ $status  $method  $uri');
+      buf.writeln('│ Message: ${err.message}');
+      if (err.response?.data != null) {
+        buf.writeln('│ Body: ${_preview(err.response!.data)}');
+      }
+      buf.write('└─────────────────────────────────────────────────────');
+      debugPrint(buf.toString());
+    }
 
     handler.next(err);
   }
