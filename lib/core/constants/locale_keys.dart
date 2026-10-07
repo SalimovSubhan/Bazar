@@ -13,6 +13,7 @@ abstract final class LocaleKeys {
   static const errorDescription = 'errorDescription';
   static const tryAgain = 'tryAgain';
   static const noInternet = 'noInternet';
+  static const backOnline = 'backOnline';
   static const offlineBanner = 'offlineBanner';
   static const inStock = 'inStock';
   static const outOfStock = 'outOfStock';

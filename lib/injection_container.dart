@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/dio_client.dart';
+import 'core/services/connectivity_cubit.dart';
 import 'core/utils/scroll_to_top_notifier.dart';
 import 'data/datasources/favorite_local_datasource.dart';
 import 'data/datasources/product_remote_datasource.dart';
@@ -27,6 +29,8 @@ final sl = GetIt.instance;
 Future<void> initDependencies() async {
   // Core
   sl.registerSingleton<ScrollToTopNotifier>(ScrollToTopNotifier());
+  sl.registerSingleton<InternetConnection>(InternetConnection());
+  sl.registerSingleton<ConnectivityCubit>(ConnectivityCubit(sl()));
   final prefs = await SharedPreferences.getInstance();
   sl.registerSingleton<SharedPreferences>(prefs);
   sl.registerSingleton<Dio>(createDio());

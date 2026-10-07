@@ -1,22 +1,20 @@
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 class ConnectivityCubit extends Cubit<bool> {
-  final Connectivity _connectivity;
-  StreamSubscription<List<ConnectivityResult>>? _sub;
+  final InternetConnection _checker;
+  StreamSubscription<InternetStatus>? _sub;
 
-  ConnectivityCubit(this._connectivity) : super(true) {
+  ConnectivityCubit(this._checker) : super(true) {
     _init();
   }
 
   Future<void> _init() async {
-    final results = await _connectivity.checkConnectivity();
-    emit(!results.contains(ConnectivityResult.none));
-
-    _sub = _connectivity.onConnectivityChanged.listen(
-      (results) => emit(!results.contains(ConnectivityResult.none)),
+    emit(await _checker.hasInternetAccess);
+    _sub = _checker.onStatusChange.listen(
+      (status) => emit(status == InternetStatus.connected),
     );
   }
 
