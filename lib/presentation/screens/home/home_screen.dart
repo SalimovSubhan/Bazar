@@ -6,6 +6,7 @@ import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
+import '../../../core/utils/refresh_notifier.dart';
 import '../../../core/utils/scroll_to_top_notifier.dart';
 import '../../../injection_container.dart';
 import '../../blocs/categories/categories_bloc.dart';
@@ -63,13 +64,21 @@ class _HomeViewState extends State<_HomeView> {
     super.initState();
     _scrollController = ScrollController()..addListener(_onScroll);
     sl<ScrollToTopNotifier>().addListener(_scrollToTop);
+    sl<RefreshNotifier>().addListener(_onRefresh);
   }
 
   @override
   void dispose() {
     sl<ScrollToTopNotifier>().removeListener(_scrollToTop);
+    sl<RefreshNotifier>().removeListener(_onRefresh);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onRefresh() {
+    setState(() => selectedCategory = null);
+    context.read<CategoriesBloc>().add(const CategoriesLoadRequested());
+    context.read<ProductsBloc>().add(const ProductsRefreshRequested());
   }
 
   void _scrollToTop() {

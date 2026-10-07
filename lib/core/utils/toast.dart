@@ -16,6 +16,7 @@ class Toast {
     Duration duration = const Duration(seconds: 2),
     ToastPosition position = ToastPosition.bottom,
     ToastType type = ToastType.success,
+    VoidCallback? onTap,
   }) {
     final overlay = navigatorKey.currentState?.overlay;
     if (overlay == null) return;
@@ -38,6 +39,7 @@ class Toast {
         position: position,
         type: type,
         onDismiss: onDismiss,
+        onTap: onTap,
       ),
     );
 
@@ -66,6 +68,7 @@ class _Toast extends StatefulWidget {
     required this.position,
     required this.type,
     required this.onDismiss,
+    this.onTap,
   });
 
   final String message;
@@ -73,6 +76,7 @@ class _Toast extends StatefulWidget {
   final ToastPosition position;
   final ToastType type;
   final VoidCallback onDismiss;
+  final VoidCallback? onTap;
 
   @override
   State<_Toast> createState() => _ToastState();
@@ -136,17 +140,18 @@ class _ToastState extends State<_Toast> with TickerProviderStateMixin {
     _timer = Timer(widget.duration, dismiss);
   }
 
-  Future<void> dismiss() async {
+  Future<void> dismiss({bool callOnTap = false}) async {
     if (_dismissing || !mounted) return;
     _dismissing = true;
     _timer?.cancel();
     await _exitCtrl.forward();
     widget.onDismiss();
+    if (callOnTap) widget.onTap?.call();
   }
 
   Color get _bgColor {
     return switch (widget.type) {
-      ToastType.success => const Color.fromRGBO(0, 0, 0, 0.8),
+      ToastType.success => const Color.fromRGBO(27, 120, 60, 0.92),
       ToastType.error => const Color.fromRGBO(213, 0, 0, 0.7),
     };
   }
@@ -173,7 +178,7 @@ class _ToastState extends State<_Toast> with TickerProviderStateMixin {
             scale: _scaleAnim,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: dismiss,
+              onTap: () => dismiss(callOnTap: true),
               onHorizontalDragUpdate: (d) {
                 if (_dismissing) return;
                 _timer?.cancel();
@@ -211,7 +216,7 @@ class _ToastState extends State<_Toast> with TickerProviderStateMixin {
   }
 
   Widget _buildCard() {
-    final bg = _bgColor;
+    final hasAction = widget.onTap != null;
 
     return Material(
       color: Colors.transparent,
@@ -219,7 +224,7 @@ class _ToastState extends State<_Toast> with TickerProviderStateMixin {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: bg,
+          color: _bgColor,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
@@ -234,11 +239,39 @@ class _ToastState extends State<_Toast> with TickerProviderStateMixin {
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Inter Tight',
                 ),
-                textAlign: TextAlign.center,
+                textAlign: hasAction ? TextAlign.start : TextAlign.center,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (hasAction) ...[
+              const SizedBox(width: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(40),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.refresh_rounded,
+                        color: Colors.white, size: 14),
+                    SizedBox(width: 4),
+                    Text(
+                      'Обновить',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter Tight',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

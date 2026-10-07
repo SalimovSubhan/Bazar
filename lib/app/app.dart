@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../core/constants/locale_keys.dart';
 import '../core/services/connectivity_cubit.dart';
 import '../core/utils/fallback_localizations.dart';
+import '../core/utils/refresh_notifier.dart';
 import '../core/utils/toast.dart';
 import '../injection_container.dart';
 import '../presentation/blocs/favorites/favorites_bloc.dart';
@@ -29,7 +30,8 @@ class App extends StatelessWidget {
             Toast.show(
               LocaleKeys.backOnline.tr(),
               type: ToastType.success,
-              duration: const Duration(seconds: 3),
+              duration: const Duration(seconds: 5),
+              onTap: () => sl<RefreshNotifier>().refresh(),
             );
           } else {
             Toast.show(
