@@ -89,17 +89,9 @@ class FavoritesScreen extends StatelessWidget {
                 return ProductCard(
                   product: product,
                   isFavorite: true,
-                  onFavoriteTap: () {
-                    context
-                        .read<FavoritesBloc>()
-                        .add(FavoriteToggleRequested(product));
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(SnackBar(
-                        content: Text(LocaleKeys.removedFromFavorites.tr()),
-                        duration: const Duration(seconds: 2),
-                      ));
-                  },
+                  onFavoriteTap: () => context
+                      .read<FavoritesBloc>()
+                      .add(FavoriteToggleRequested(product)),
                   onTap: () =>
                       context.push(AppRoutes.productDetailPath(product.id)),
                 );

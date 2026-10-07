@@ -91,17 +91,7 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   void _toggleFavorite(BuildContext ctx, product) {
-    final favBloc = ctx.read<FavoritesBloc>();
-    final wasAdded = !favBloc.state.isFavorite(product.id);
-    favBloc.add(FavoriteToggleRequested(product));
-    ScaffoldMessenger.of(ctx)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(wasAdded
-            ? LocaleKeys.addedToFavorites.tr()
-            : LocaleKeys.removedFromFavorites.tr()),
-        duration: const Duration(seconds: 2),
-      ));
+    ctx.read<FavoritesBloc>().add(FavoriteToggleRequested(product));
   }
 
   Future<void> _openCategories() async {
