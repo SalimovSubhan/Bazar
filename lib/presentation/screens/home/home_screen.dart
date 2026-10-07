@@ -7,12 +7,12 @@ import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../core/utils/scroll_to_top_notifier.dart';
+import '../../../core/utils/toast.dart';
 import '../../../injection_container.dart';
 import '../../blocs/categories/categories_bloc.dart';
 import '../../blocs/favorites/favorites_bloc.dart';
 import '../../blocs/products/products_bloc.dart';
 import '../../widgets/app_empty_widget.dart';
-import '../../widgets/app_error_widget.dart';
 import '../../widgets/home_app_bar.dart';
 import '../../widgets/settings_bottom_sheet.dart';
 import 'widgets/banner_carousel.dart';
@@ -110,12 +110,11 @@ class _HomeViewState extends State<_HomeView> {
       listenWhen: (prev, curr) =>
           curr.error != null && curr.error != prev.error,
       listener: (context, state) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            content: Text(LocaleKeys.noInternet.tr()),
-            duration: const Duration(seconds: 3),
-          ));
+        Toast.show(
+          LocaleKeys.noInternet.tr(),
+          type: ToastType.error,
+          duration: const Duration(seconds: 3),
+        );
       },
       child: BlocBuilder<ProductsBloc, ProductsState>(
         builder: (context, state) => Scaffold(
@@ -135,13 +134,6 @@ class _HomeViewState extends State<_HomeView> {
 
   Widget _buildBody(BuildContext context, ProductsState state) {
     if (!state.isInitialized && state.isLoading) return _buildShimmer();
-
-    if (state.hasError && state.products.isEmpty) {
-      return AppErrorWidget(
-        onRetry: () =>
-            context.read<ProductsBloc>().add(const ProductsLoadRequested()),
-      );
-    }
     return _buildContent(context, state);
   }
 
@@ -215,7 +207,7 @@ class _HomeViewState extends State<_HomeView> {
                     ),
                   ),
                 )
-              else if (!state.isLoading && state.products.isEmpty)
+              else if (!state.isLoading && state.products.isEmpty && !state.hasError)
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: AppEmptyWidget(

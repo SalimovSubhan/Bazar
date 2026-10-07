@@ -8,6 +8,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../core/utils/debouncer.dart';
+import '../../../core/utils/toast.dart';
 import '../../../domain/entities/product.dart';
 import '../../../injection_container.dart';
 import '../../../domain/usecases/search_products_usecase.dart';
@@ -29,7 +30,6 @@ class _SearchScreenState extends State<SearchScreen> {
   String _query = '';
   bool _isLoading = false;
   List<Product> _results = [];
-  String? _error;
   final List<String> _recents = [];
 
   @override
@@ -48,10 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onChanged(String q) {
-    setState(() {
-      _query = q;
-      _error = null;
-    });
+    setState(() => _query = q);
     if (q.trim().isEmpty) {
       setState(() {
         _results = [];
@@ -75,9 +72,14 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
+          _results = [];
           _isLoading = false;
         });
+        Toast.show(
+          LocaleKeys.noInternet.tr(),
+          type: ToastType.error,
+          duration: const Duration(seconds: 3),
+        );
       }
     }
   }
@@ -119,7 +121,6 @@ class _SearchScreenState extends State<SearchScreen> {
                 _query = '';
                 _results = [];
                 _isLoading = false;
-                _error = null;
               });
             },
             onCancel: () => context.pop(),
@@ -196,15 +197,6 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildResults(bool isDark) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
-    }
-    if (_error != null) {
-      return Center(
-        child: Text(_error!,
-            style: TextStyle(
-                color: isDark
-                    ? AppColors.subtitleDark
-                    : AppColors.subtitleLight)),
-      );
     }
     if (_results.isEmpty) {
       return AppEmptyWidget(

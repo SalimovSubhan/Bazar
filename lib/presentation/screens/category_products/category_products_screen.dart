@@ -4,12 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/app_colors.dart';
+import '../../../core/utils/toast.dart';
 import '../../../core/constants/locale_keys.dart';
 import '../../../core/utils/app_extensions.dart';
 import '../../../injection_container.dart';
 import '../../blocs/favorites/favorites_bloc.dart';
 import '../../blocs/products/products_bloc.dart';
-import '../../widgets/app_error_widget.dart';
 import '../../widgets/app_gradient_bar.dart';
 import '../home/widgets/product_card.dart';
 import '../home/widgets/shimmer_product_card.dart' show ShimmerProductCard;
@@ -115,12 +115,11 @@ class _CategoryProductsViewState extends State<_CategoryProductsView> {
       listenWhen: (prev, curr) =>
           curr.error != null && curr.error != prev.error,
       listener: (context, state) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            content: Text(LocaleKeys.noInternet.tr()),
-            duration: const Duration(seconds: 3),
-          ));
+        Toast.show(
+          LocaleKeys.noInternet.tr(),
+          type: ToastType.error,
+          duration: const Duration(seconds: 3),
+        );
       },
       child: BlocBuilder<ProductsBloc, ProductsState>(
         builder: (context, state) {
@@ -152,15 +151,6 @@ class _CategoryProductsViewState extends State<_CategoryProductsView> {
     if (state.isLoading && state.products.isEmpty) {
       return _buildShimmer();
     }
-
-    if (state.hasError && state.products.isEmpty) {
-      return AppErrorWidget(
-        onRetry: () => context
-            .read<ProductsBloc>()
-            .add(ProductsCategoryChanged(widget.category)),
-      );
-    }
-
     return _buildGrid(context, state);
   }
 
