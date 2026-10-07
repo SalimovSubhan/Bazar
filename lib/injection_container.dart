@@ -6,6 +6,7 @@ import 'core/network/dio_client.dart';
 import 'core/services/connectivity_cubit.dart';
 import 'core/utils/scroll_to_top_notifier.dart';
 import 'data/datasources/favorite_local_datasource.dart';
+import 'data/datasources/product_local_datasource.dart';
 import 'data/datasources/product_remote_datasource.dart';
 import 'data/local/app_database.dart';
 import 'data/repositories/favorite_repository_impl.dart';
@@ -42,13 +43,16 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<ProductRemoteDataSource>(
     () => ProductRemoteDataSource(sl()),
   );
+  sl.registerLazySingleton<ProductLocalDataSource>(
+    () => ProductLocalDataSource(sl()),
+  );
   sl.registerLazySingleton<FavoriteLocalDataSource>(
     () => FavoriteLocalDataSource(sl()),
   );
 
   // Repositories
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(sl()),
+    () => ProductRepositoryImpl(remote: sl(), local: sl()),
   );
   sl.registerLazySingleton<FavoriteRepository>(
     () => FavoriteRepositoryImpl(sl()),
